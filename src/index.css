@@ -1,0 +1,202 @@
+.heading{
+  text-align: center;
+  color: #FEFFFF;
+  padding-top: 30px;
+  padding-bottom: 50px;
+  font-family: "Livvic", sans-serif;
+  font-weight: 900;
+  font-style: normal;
+}
+
+.title{
+  color: #FEFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  font-size: 40px;
+  font-family: "Londrina Solid", sans-serif;
+  font-weight: 900;
+  font-style: normal;
+}
+
+.loginbutton{
+  border-radius: 20px;
+  border: none;
+  background-color: #66FCF1;
+  color: black;
+  padding : 10px;
+  margin-top : 40px ;
+  font-weight: bold;
+  width : 270px
+}
+
+.loginbutton:hover {
+  transform: scale(1.1); /* Increase the size by 10% */
+}
+
+.loginpagelink{
+  color:#FEFFFF;
+
+}
+
+.loginpagelink:hover{
+  color :#66FCF1;
+}
+
+.col-form-label{
+  font-weight: bold;
+}
+
+
+ body, .home {
+  background-color: #0b0c10;
+  margin: 0; 
+  padding: 0;
+} 
+
+.menu{
+
+  border-radius:7px;
+  background-color : #1F2833;
+  margin : 5px;
+  
+}
+
+.Authmenu{
+  padding:20px 0px;
+  background-color : #464866;
+  margin : 5px;
+}
+
+.menuicon{
+  padding-bottom: 20px;
+}
+
+.forward-backward-button{
+  border-radius: 20px;
+  background-color: black;
+  padding: 8px 12px;
+  color:white;
+  border: none;
+  cursor: pointer;
+}
+
+
+#signup{
+  background-color :#464866;  
+  border: none;
+  padding: 10px 20px;
+  font-weight: bold;
+  margin-left: 20px;
+}
+
+#signup:hover{
+  transform: scale(1.1);
+}
+
+#login{
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-weight: bold;
+  margin-left: 20px; 
+}
+
+#login:hover{
+  transform: scale(1.1);
+
+}
+
+.password-input {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.profileButton{
+  border: none;
+  color: black;
+  margin-right: 20px;
+  font-size: large;
+  font-weight: bold;
+  background-color: white;
+
+}
+
+.profileButton:hover{
+  transform: scale(1.1);
+
+}
+
+
+.songrow:hover{
+  background-color: #333333;
+
+}
+
+.playicons{
+  color: white;
+  padding: 0px 5px;
+  font-size: 14px;
+  margin-left: 6px;
+  margin-bottom : 5px;
+}
+
+.playicons:hover{
+  cursor: pointer;
+ 
+
+}
+
+.songcard:hover {
+  transform: scale(1.05);
+  /* rgba(0, 0, 0, 0.3) */
+}
+
+.searchinput{
+  border-radius: 20px;
+  padding: 10px 10px;
+  background-color: #333333;
+  border : none;
+  color : white;
+  margin-bottom: 15px;
+}
+
+.addmore:hover{
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.musicbutton.active{
+  font-size: 20px;
+  color: white;
+}
+
+.likedsongrow:hover{
+  background-color: #333333;
+
+}
+
+/* .livvic-medium {
+  font-family: "Livvic", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.livvic-semibold {
+  font-family: "Livvic", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.livvic-black {
+  font-family: "Livvic", sans-serif;
+  font-weight: 900;
+  font-style: normal;
+} */
