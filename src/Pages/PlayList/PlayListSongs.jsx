@@ -1,306 +1,231 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import MainLayout from '../../Layout/MainLayout';
-import { useCurrentSong } from '../../Context/SongContext';
-import { usePlayList } from '../../Context/PlaylistContextProvider';
-import { Backend_url } from '../../utils/Config';
-import { Link } from 'react-router-dom';
-import { FaHeart } from 'react-icons/fa';
-import { useAuth } from '../../Context/AuthProvider';
-
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import MainLayout from "../../Layout/MainLayout";
+import { useCurrentSong } from "../../Context/SongContext";
+import { usePlayList } from "../../Context/PlaylistContextProvider";
+import { Backend_url } from "../../utils/Config";
+import { FaHeart } from "react-icons/fa";
+import { useAuth } from "../../Context/AuthProvider";
+import toast from "react-hot-toast";
 
 const PlayListSongs = () => {
+  const { setCurrentSong, setAllSongs } = useCurrentSong();
+  const { playListId, setPlayListId } = usePlayList();
+  const [auth] = useAuth();
 
-    const { setCurrentSong, currentSong, setAllSongs, allSongs } = useCurrentSong()
+  const [songs, setSongs] = useState([]);
+  const [playlistDetails, setPlaylistDetails] = useState({});
+  const [likedSongsId, setLikedSongsId] = useState([]);
+  const [likedPlaylistArray, setLikedPlaylistArray] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    const [songs, setSongs] = useState([])
-    const [playListdetails, setPlayListDetails] = useState({})
-    const [likedSongsId, setLikedSongsId] = useState([])
-    const [likedPlaylistArray, setLikedPlaylistArray] = useState([])
+  /* ---------------- FETCH PLAYLIST ---------------- */
 
+  const getPlaylistSongs = async (id) => {
+    try {
+      const { data } = await axios.get(
+        `${Backend_url}/api/playlist/getplaylistbyid/${id}`
+      );
 
-
-    const { playListId, setPlayListId } = usePlayList()
-    const [auth, setAuth] = useAuth()
-
-
-
-
-    const getplaylistSongs = async () => {
-
-        const { data } = await axios.get(`${Backend_url}/api/playlist/getplaylistbyid/${playListId}`)
-
-        setSongs(data.playList.songs);
-        setAllSongs(data.playList.songs);
-        setPlayListDetails(data.playList);
-
+      setSongs(data.playList.songs);
+      setAllSongs(data.playList.songs);
+      setPlaylistDetails(data.playList);
+    } catch {
+      toast.error("Failed to load playlist");
+    } finally {
+      setLoading(false);
     }
-
-
-    useEffect(() => {
-
-        if (!playListId) {
-            setPlayListId(JSON.parse(localStorage.getItem('currentPlaylist')))
-        }
-        else {
-            getplaylistSongs()
-        }
-
-    }, [playListId])
-
-    // liked songs start 
-
-    // getting liked songs of user
-
-    const getLikedSongs = async () => {
-        try {
-            const { data } = await axios.get(`${Backend_url}/api/user/getlikedsongs`);
-
-            const likedSongArray = data.userLikedSongs.likedSongs
-
-            if (likedSongArray.length > 0) {
-                var likedSongIds = likedSongArray.map(function (song) {
-                    return song._id;
-                });
-                setLikedSongsId(data => likedSongIds)
-            }
-
-        }
-        catch (error) {
-            console.log(error);
-        }
-    };
-
-    // adding and removing liked song of user    
-
-    const addOrRemoveLikes = async (newlikedarray) => {
-        try {
-            await axios.post(`${Backend_url}/api/user/addorremovelikes`, { newlikedarray })
-
-        }
-        catch (error) {
-            console.log(error);
-        }
-    }
-
-    // useEffect to call getLikedSongs() 
-    // if auth is avalable else it will check local storage to check whether token is present or not
-
-    useEffect(() => {
-        if (auth.token) {
-            getLikedSongs()
-            getLikedPlayList()
-        }
-        else {
-
-            const data = localStorage.getItem('auth')
-
-            if (data) {
-                const parseData = JSON.parse(data)
-                setAuth({
-                    ...auth,
-                    user: parseData.user,
-                    token: parseData.token
-                })
-
-            }
-
-            else {
-                if (confirm('Login to Continue')) {
-                    navigate('/login');
-                } else {
-                    navigate('/');
-                }
-
-            }
-        }
-
-    }, [auth])
-
-
-
-
-
-    const handleHeartClick = (e, songId) => {
-
-        e.preventDefault();
-        const index = likedSongsId.indexOf(songId);
-        e.stopPropagation();
-
-        if (index === -1) {
-            setLikedSongsId(prevLikedSongs => {
-                const newLikedSongs = [...prevLikedSongs, songId];
-                addOrRemoveLikes(newLikedSongs)
-                return newLikedSongs;
-            });
-        }
-
-        else {
-            const updatedLikedSongs = likedSongsId.filter((song, i) => i !== index);
-            setLikedSongsId(updatedLikedSongs); // Update likedSongs state
-            addOrRemoveLikes(updatedLikedSongs);
-        }
-
-    };
-
-    const handleCardClick = (song) => {
-
-        setCurrentSong(song);
-
-    };
-
-    // like song end   
-
-
-    const getLikedPlayList = async () => {
-
-        try {
-            const { data } = await axios.get(`${Backend_url}/api/user/getlikedplaylist`);
-
-            setLikedPlaylistArray(data.LikedPlaylistId.likedPlaylists)
-
-        }
-
-        catch (error) {
-            console.log(error);
-        }
-    }
-
-    const addLikedPlaylist = async (playlistId) => {
-        try {
-            await axios.post(`${Backend_url}/api/user/addlikedplaylist`, { playlistId })
-            getLikedPlayList()
-
-        }
-        catch (error) {
-            console.log(error);
-        }
-    }
-
-    const removeLikedPlaylist = async (playlistId) => {
-        try {
-            await axios.post(`${Backend_url}/api/user/removelikedplaylist`, { playlistId })
-            getLikedPlayList()
-
-        }
-        catch (error) {
-            console.log(error);
-        }
-    }
-
-
-
-
-    return (
-
-        <MainLayout>
-            <div className='row' style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems:'baseline',
-                marginBottom: '20px'
-            }}>
-                <div className="col-7" style={{ fontSize: '30px' }}>{playListdetails.name}</div>
-
-                <div className="col-2">
-                    <div className="row" style={{ fontSize: '25px' }}>
-                        <FaHeart className='like'
-
-                            onClick={() => {
-
-
-                                if (!likedPlaylistArray.includes(playListdetails._id)) {
-
-                                    addLikedPlaylist(playListdetails._id)
-                                   
-                                }
-                                else {
-                                    removeLikedPlaylist(playListdetails._id)
-
-                                }
-
-                            }}
-
-                            style={{ color: likedPlaylistArray.includes(playListdetails._id) ? 'red' : 'white' }}
-
-                        />
-                    </div>
-                    <div className="row" >
-                        <p style={{textAlign:'center'}}>{likedPlaylistArray.includes(playListdetails._id) ? 'Liked!' : 'Like'}</p>
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div>
-                {songs &&
-
-                    songs.length > 0 &&
-                    <>
-                    <div style={{marginBottom:'30px',fontSize:'20px',fontWeight:'bold'}}>
-                        SONGS
-                    </div>
-                        {songs.map((item, index) => (
-
-                            <Link key={index} onClick={(e) => {
-
-                                handleCardClick(item);
-                            }}
-
-
-                                style={{ textDecoration: 'none', color: 'inherit' }}>
-                                <div className="row songrow" style={{ alignItems: 'center', padding: '10px', borderRadius: '6px' }}>
-                                    <div className="col-2">
-                                        <img src={item.thumbNail} style={{ height: '40px', width: '40px' }} alt="Thumbnail"></img>
-                                    </div>
-                                    <div className="col-6">
-                                        {(item?.name || '').length > 15 ?
-                                            <p style={{ paddingTop: '0px', margin: '0px', color: 'white' }}> {(item?.name || '').substring(0, 15)}...</p>
-                                            :
-                                            <p style={{ paddingTop: '0px', margin: '0px', color: 'white' }}> {(item?.name || '').substring(0, 15)}</p>
-                                        }
-
-                                        {(item?.artist?.userName || '').length > 15 ?
-                                            <p style={{ paddingTop: '0px', margin: '0px', color: 'white' }}> {(item?.artist?.userName || '').substring(0, 15)}...</p>
-                                            :
-                                            <p style={{ paddingTop: '0px', margin: '0px', color: 'white' }}> {(item?.artist?.userName || '').substring(0, 15)}</p>
-                                        }
-
-
-                                    </div>
-
-                                    <div className='col-2'>
-                                        {item.duration}
-                                    </div>
-
-                                    <div className='col-2' style={{ paddingLeft: '30px' }}>
-                                        <FaHeart className='like'
-
-                                            onClick={(e) => {
-                                                handleHeartClick(e, item._id)
-
-                                            }}
-
-                                            style={{ color: likedSongsId.includes(item._id) ? 'red' : 'white' }}
-                                        />
-                                    </div>
-
-                                </div>
-                            </Link>
-                        ))}
-
-                    </>
-
-
-                }
-            </div>
-
-
-        </MainLayout>
-
-
+  };
+
+  useEffect(() => {
+    const storedId = JSON.parse(
+      localStorage.getItem("currentPlaylist")
     );
+
+    const idToUse = playListId || storedId;
+
+    if (idToUse) {
+      setPlayListId(idToUse);
+      getPlaylistSongs(idToUse);
+    }
+  }, [playListId]);
+
+  /* ---------------- LIKED SONGS ---------------- */
+
+  const getLikedSongs = async () => {
+    try {
+      const { data } = await axios.get(
+        `${Backend_url}/api/user/getlikedsongs`
+      );
+
+      const ids =
+        data.userLikedSongs?.likedSongs?.map(
+          (song) => song._id
+        ) || [];
+
+      setLikedSongsId(ids);
+    } catch {}
+  };
+
+  const updateLikes = async (newArray) => {
+    try {
+      await axios.post(
+        `${Backend_url}/api/user/addorremovelikes`,
+        { newlikedarray: newArray }
+      );
+    } catch {}
+  };
+
+  const handleHeartClick = (e, songId) => {
+    e.stopPropagation();
+
+    let updated;
+
+    if (likedSongsId.includes(songId)) {
+      updated = likedSongsId.filter((id) => id !== songId);
+    } else {
+      updated = [...likedSongsId, songId];
+    }
+
+    setLikedSongsId(updated);
+    updateLikes(updated);
+  };
+
+  /* ---------------- LIKED PLAYLIST ---------------- */
+
+  const getLikedPlaylist = async () => {
+    try {
+      const { data } = await axios.get(
+        `${Backend_url}/api/user/getlikedplaylist`
+      );
+
+      setLikedPlaylistArray(
+        data.LikedPlaylistId?.likedPlaylists || []
+      );
+    } catch {}
+  };
+
+  const togglePlaylistLike = async () => {
+    try {
+      if (likedPlaylistArray.includes(playlistDetails._id)) {
+        await axios.post(
+          `${Backend_url}/api/user/removelikedplaylist`,
+          { playlistId: playlistDetails._id }
+        );
+      } else {
+        await axios.post(
+          `${Backend_url}/api/user/addlikedplaylist`,
+          { playlistId: playlistDetails._id }
+        );
+      }
+
+      getLikedPlaylist();
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (auth?.token) {
+      getLikedSongs();
+      getLikedPlaylist();
+    }
+  }, [auth?.token]);
+
+  /* ---------------- UI ---------------- */
+
+  return (
+    <MainLayout>
+      <div className="max-w-6xl mx-auto">
+
+        {/* HEADER */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">
+            {playlistDetails.name}
+          </h1>
+
+          <button
+            onClick={togglePlaylistLike}
+            className="flex flex-col items-center text-sm"
+          >
+            <FaHeart
+              className={`text-2xl transition ${
+                likedPlaylistArray.includes(
+                  playlistDetails._id
+                )
+                  ? "text-red-500"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            />
+            <span className="text-zinc-400 mt-1">
+              {likedPlaylistArray.includes(
+                playlistDetails._id
+              )
+                ? "Liked"
+                : "Like"}
+            </span>
+          </button>
+        </div>
+
+        {/* LOADING */}
+        {loading && (
+          <p className="text-zinc-500">
+            Loading songs...
+          </p>
+        )}
+
+        {/* EMPTY STATE */}
+        {!loading && songs.length === 0 && (
+          <p className="text-zinc-500">
+            No songs in this playlist.
+          </p>
+        )}
+
+        {/* SONG LIST */}
+        <div className="space-y-3">
+          {songs.map((song) => (
+            <div
+              key={song._id}
+              onClick={() => setCurrentSong(song)}
+              className="flex justify-between items-center bg-zinc-900 hover:bg-zinc-800 p-4 rounded-lg transition cursor-pointer"
+            >
+              <div className="flex items-center gap-4">
+                <img
+                  src={song.thumbNail}
+                  alt={song.name}
+                  className="w-12 h-12 rounded-md object-cover"
+                />
+                <div>
+                  <p className="text-white font-medium">
+                    {song.name}
+                  </p>
+                  <p className="text-sm text-zinc-400">
+                    {song.artist?.userName}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-6">
+                <span className="text-sm text-zinc-400">
+                  {song.duration}
+                </span>
+
+                <FaHeart
+                  onClick={(e) =>
+                    handleHeartClick(e, song._id)
+                  }
+                  className={`text-lg transition ${
+                    likedSongsId.includes(song._id)
+                      ? "text-red-500"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+      </div>
+    </MainLayout>
+  );
 };
 
 export default PlayListSongs;

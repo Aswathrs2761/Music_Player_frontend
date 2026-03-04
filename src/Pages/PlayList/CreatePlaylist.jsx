@@ -1,221 +1,208 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { Backend_url } from '../../utils/Config';
-import { Link, useNavigate } from 'react-router-dom';
-import { useCurrentSong } from '../../Context/SongContext';
-import MainLayout from '../../Layout/MainLayout';
-import { CiSquarePlus } from "react-icons/ci";
-import { useAuth } from '../../Context/AuthProvider';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Backend_url } from "../../utils/Config";
+import { useNavigate } from "react-router-dom";
+import { useCurrentSong } from "../../Context/SongContext";
+import MainLayout from "../../Layout/MainLayout";
+import { useAuth } from "../../Context/AuthProvider";
+import toast from "react-hot-toast";
 
 const CreatePlaylist = () => {
-    const [playListname, setPlayListname] = useState('');
-    const [playListId, setPlayListId] = useState();
+  const [playlistName, setPlaylistName] = useState("");
+  const [playlistId, setPlaylistId] = useState(null);
+  const [thumbNail, setThumbNail] = useState("");
 
-    const [searchText, setSearchText] = useState('');
-    const [searchResults, setSearchResults] = useState([]);
-    const { setCurrentSong } = useCurrentSong();
-    const [thumbNail , setThumbNail] = useState("")
+  const [searchText, setSearchText] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [addedSongs, setAddedSongs] = useState([]);
 
-    const [auth,setAuth] = useAuth()
+  const { setCurrentSong } = useCurrentSong();
+  const [auth, setAuth] = useAuth();
+  const navigate = useNavigate();
 
-    const navigate = useNavigate()
+  /* ---------------- CREATE OR ADD SONG ---------------- */
 
-
-    const handleThumbnail =(e)=>{
-        setThumbNail(e.target.value)
+  const createOrAddSong = async (songId) => {
+    if (!playlistName.trim()) {
+      toast.error("Please enter playlist name");
+      return;
     }
 
-    const handleOnChangePlaylistName = (e) => {
-        const value = e.target.value
-        setPlayListname(value)
+    try {
+      if (!playlistId) {
+        const { data } = await axios.post(
+          `${Backend_url}/api/playlist/create-playlist`,
+          {
+            songs: songId,
+            name: playlistName,
+            thumbNail,
+          }
+        );
+
+        setPlaylistId(data.newPlaylist._id);
+        toast.success("Playlist created 🎉");
+      } else {
+        await axios.post(
+          `${Backend_url}/api/playlist/addsong`,
+          {
+            songId,
+            playlistId,
+          }
+        );
+      }
+
+      setAddedSongs((prev) => [...prev, songId]);
+      toast.success("Song added");
+    } catch (error) {
+      toast.error("Something went wrong");
     }
+  };
 
+  /* ---------------- SEARCH ---------------- */
 
+  const searchSongs = async (text) => {
+    try {
+      const { data } = await axios.post(
+        `${Backend_url}/api/song/search-only-songs`,
+        { searchText: text }
+      );
 
-    const createPlaylist = async (id) => {
-        try {
-
-            if (playListname.length === 0) {
-                return alert("please Enter PlayList Name")
-            }
-
-            
-
-
-
-            if (!playListId) {
-
-
-                const { data } = await axios.post(`${Backend_url}/api/playlist/create-playlist`,
-                    {
-                        songs: id,
-                        name: playListname,
-                        thumbNail :thumbNail
-
-                    }
-
-                )
-
-                const playlistnamehtml = document.getElementById("playlistname")
-                playlistnamehtml.disabled = true
-
-                setPlayListId(data.newPlaylist._id)
-            }
-
-            else {
-                const { data } = await axios.post(`${Backend_url}/api/playlist/addsong`,
-                    {
-                        songId: id,
-                        playlistId: playListId
-                    }
-
-                )
-            }
-        }
-
-        catch (error) {
-            console.log(error);
-        }
-
+      if (data.success) {
+        setSearchResults(data.result);
+      } else {
+        setSearchResults([]);
+      }
+    } catch {
+      setSearchResults([]);
     }
+  };
 
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchText(value);
+    searchSongs(value);
+  };
 
-    
-    const handleOnChange = async (e) => {
-        const value = e.target.value;
-        setSearchText(value);
+  /* ---------------- AUTH CHECK ---------------- */
 
-        searchSongs(value);
-    };
+  useEffect(() => {
+    if (!auth?.token) {
+      const localData = localStorage.getItem("auth");
 
-    const searchSongs = async (text) => {
-        try {
-            const { data } = await axios.post(`${Backend_url}/api/song/search-only-songs`, { searchText: text });
-            if (data.success) {
-                setSearchResults(data.result);
-            } else {
-                setSearchResults([]);
-            }
-        } catch (error) {
-            console.error('Error searching songs:', error);
-            setSearchResults([]);
-        }
-    };
+      if (localData) {
+        const parsed = JSON.parse(localData);
+        setAuth({
+          ...auth,
+          user: parsed.user,
+          token: parsed.token,
+        });
+      } else {
+        toast("Login required");
+        navigate("/login");
+      }
+    }
+  }, [auth]);
 
+  /* ---------------- UI ---------------- */
 
-    useEffect(() => {
-        if (!auth.token) 
-           {
-            const data = localStorage.getItem('auth')
+  return (
+    <MainLayout>
+      <div className="max-w-4xl mx-auto">
 
-            if (data) {
-                const parseData = JSON.parse(data)
-                setAuth({
-                    ...auth,
-                    user: parseData.user,
-                    token: parseData.token
-                })
+        <h1 className="text-2xl font-bold mb-8">
+          Create Playlist
+        </h1>
 
-            }
+        {/* Playlist Name */}
+        <div className="mb-6">
+          <label className="block text-sm text-zinc-400 mb-2">
+            Playlist Name
+          </label>
+          <input
+            type="text"
+            value={playlistName}
+            onChange={(e) => setPlaylistName(e.target.value)}
+            disabled={playlistId}
+            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            placeholder="My awesome playlist"
+          />
+        </div>
 
-            else {
-                if (confirm('Login to Continue')) {
-                    navigate('/login');
-                } else {
-                    navigate('/');
-                }
+        {/* Thumbnail */}
+        <div className="mb-8">
+          <label className="block text-sm text-zinc-400 mb-2">
+            Thumbnail URL
+          </label>
+          <input
+            type="text"
+            value={thumbNail}
+            onChange={(e) => setThumbNail(e.target.value)}
+            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            placeholder="Paste image URL"
+          />
+        </div>
 
-            }
-        }
+        {/* Search Section */}
+        <h2 className="text-lg font-semibold mb-4">
+          Find songs for your playlist
+        </h2>
 
-    }, [auth])
+        <input
+          type="text"
+          value={searchText}
+          onChange={handleSearchChange}
+          placeholder="Search songs..."
+          className="w-full mb-6 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+        />
 
+        {/* No Results */}
+        {searchResults.length === 0 && searchText.trim() !== "" && (
+          <div className="text-zinc-500 text-center py-12">
+            No results found for "{searchText}"
+          </div>
+        )}
 
+        {/* Results */}
+        <div className="space-y-3">
+          {searchResults.map((song) => (
+            <div
+              key={song._id}
+              className="flex items-center justify-between bg-zinc-900 hover:bg-zinc-800 p-4 rounded-lg transition"
+            >
+              <div className="flex items-center gap-4">
+                <img
+                  src={song.thumbNail}
+                  alt={song.name}
+                  className="w-12 h-12 rounded-md object-cover"
+                />
+                <div>
+                  <p className="text-white font-medium truncate max-w-xs">
+                    {song.name}
+                  </p>
+                  <p className="text-sm text-zinc-400">
+                    {song.artist?.userName}
+                  </p>
+                </div>
+              </div>
 
-    
-    return (
-        <MainLayout>
-           
-
-            <div style={{ marginBottom: "30px" }}>
-                <p style={{ fontWeight: 'bold', alignContent: 'center', margin: '20px 0px 5px' }} >Playlist name</p>
-                <input style={{ borderRadius: "20px", padding: "15px 10px", margin: '5px 5px ' }}
-                    id='playlistname'
-                    size="40" type='text' onChange={handleOnChangePlaylistName} value={playListname}></input>
-
-
+              <button
+                onClick={() => createOrAddSong(song._id)}
+                disabled={addedSongs.includes(song._id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+                  addedSongs.includes(song._id)
+                    ? "bg-green-600 text-white cursor-default"
+                    : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                }`}
+              >
+                {addedSongs.includes(song._id) ? "Added" : "Add"}
+              </button>
             </div>
+          ))}
+        </div>
 
- <div style={{ marginBottom: "30px" }}>
-               
- <p style={{ fontWeight: 'bold', alignContent: 'center', margin: '20px 0px 5px' }}>Add picture</p>
-                    
-                    <input style={{ borderRadius: "20px", padding: "15px 10px", margin: '5px 5px ' }}
-                    id='thumbnail'
-                    onChange={handleThumbnail}
-                    value={thumbNail}
-                    size="40" type='text' ></input>
-            </div>
-
-
-            <div style={{ marginBottom: "20px" }}>
-                <h4>Let's find something for your playlist</h4>
-            </div>
-
-            <div>
-                <input className='searchinput' size="40" type="text" placeholder="What do you want to listen?" value={searchText} onChange={handleOnChange} />
-            </div>
-
-            <div className='container'>
-                {searchResults.length === 0 && searchText.trim() !== '' && (
-                    <div style={{ textAlign: 'center', marginTop: '100px' }}>
-                        <h3>No results found for "{searchText}"</h3>
-                        <h5>Please make sure your words are spelled correctly, or use fewer or different keywords.</h5>
-                    </div>
-                )}
-
-                {searchResults.length > 0 && (
-                    <div>
-                        {searchResults.map((item, index) => (
-                            <div className="row songrow" style={{ alignItems: 'center', padding: '10px', borderRadius: '6px' }}>
-                                <div className="col-2">
-                                    <img src={item.thumbNail} style={{ height: '40px', width: '40px' }} alt="Thumbnail" />
-                                </div>
-                                <div className="col-8">
-                                    <div className="row">
-                                        <p style={{ paddingTop: '0px', margin: '0px', color: 'white' }}>{item.name.substring(0, 20)}...</p>
-                                    </div>
-                                </div>
-                                <div className="col-2">
-                                    <div className="row">
-                                        <button id = {`addButton${item._id}`}
-                                            onClick={() => {
-
-
-                                                createPlaylist(item._id)
-                                                const addButton = document.getElementById(`addButton${item._id}`)
-                                                addButton.innerHTML='Added'
-
-                                                setTimeout(()=>{
-                                                    addButton.innerHTML = 'Add'
-                                                },1000)
-                                                
-                                            }}
-
-                                            style={{ borderColor: "white", borderRadius: "20px", padding: "6px 12px", fontSize: '14px', color: 'white',fontWeight: 'bold', backgroundColor: 'black' }}
-                                        >
-                                            Add
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                        ))}
-                    </div>
-                )}
-            </div>
-        </MainLayout>
-    );
+      </div>
+    </MainLayout>
+  );
 };
 
 export default CreatePlaylist;

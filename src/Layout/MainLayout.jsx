@@ -1,154 +1,64 @@
-import React, { useState, useEffect } from 'react';
-import Menu from '../Layout/Menu';
-import AuthMenu from '../Layout/AuthMenu';
-import axios from 'axios';
-import { useAuth } from '../Context/AuthProvider';
-import { Backend_url } from '../utils/Config';
-import { Link } from 'react-router-dom';
-import { Howl, Howler } from 'howler';
-import { LuShuffle } from "react-icons/lu";
-import { MdOutlineSkipPrevious } from "react-icons/md";
-import { MdOutlineSkipNext } from "react-icons/md";
-import { FaPlay } from "react-icons/fa";
-import { IoMdRepeat } from "react-icons/io";
-import { FaPause } from "react-icons/fa";
-import Footer from './Footer';
-import { useCurrentSong } from '../Context/SongContext';
+import React, { useEffect } from "react";
+import Menu from "../Layout/Menu";
+import AuthMenu from "../Layout/AuthMenu";
+import axios from "axios";
+import { useAuth } from "../Context/AuthProvider";
+import { Backend_url } from "../utils/Config";
+import { useCurrentSong } from "../Context/SongContext";
+import Footer from "./Footer";
 
+const MainLayout = ({ children }) => {
+  const [auth] = useAuth();
+  const { currentSong } = useCurrentSong();
 
-const MainLayout = ({children}) => {
-    const [myMusic, setMyMusic] = useState([])
+  const getMyMusic = async () => {
+    try {
+      const res = await axios.get(
+        `${Backend_url}/api/song/get-allsongs`
+      );
 
-    const [auth, setAuth] = useAuth()
-
-    const [currentSound, setCurrentSound] = useState(null)
-
-    const [isPaused, setIspaused] = useState(true)
-
-    const {currentSong, setCurrentSong} = useCurrentSong()
-
-    
-
-    const layoutstyle ={
-        height: currentSong ? '98%' :'100%',
-        overflowY: 'auto',
-        backgroundColor: 'black',
-        color: 'white' 
+      if (!res.data.success) return;
+    } catch (error) {
+      console.log(error);
     }
+  };
 
-
-    const getMyMusic = async () => {
-        try {
-            const res = await axios.get(`${Backend_url}/api/song/get-allsongs`);
-            if (res.data.success === false) {
-                alert(res.data.message)
-                navigate('/')
-                return
-
-            }
-            else {
-                setMyMusic(res.data.songs);
-
-
-
-            }
-
-        }
-        catch (error) {
-            console.log(error);
-        }
-    };
-
-    const pauseMusic = () =>{
-        currentSound.pause()
+  useEffect(() => {
+    if (auth?.token) {
+      getMyMusic();
     }
+  }, [auth?.token]);
 
-    const togglePlayPause = (track) =>{
-        if (isPaused) 
-        {
-            playMusic(track)            
-            setIspaused(false)
-            
-        }
-        else
-        {
-            pauseMusic()
-            setIspaused(true)
-            
-           
-        }
-    }
+  return (
+    <div className="flex h-screen bg-black text-white overflow-hidden">
 
+      {/* Sidebar */}
+      <div className="w-64 bg-zinc-950 border-r border-zinc-800 flex-shrink-0">
+        <Menu />
+      </div>
 
-    const playMusic = (songSrc) => {
-        if (currentSound) {
-            currentSound.stop()
-        }
+      {/* Main Content Area */}
+      <div className="flex flex-col flex-1">
 
-        let sound = new Howl({
-            src: [songSrc],
-            html5: true
-        });
-
-        setCurrentSound(sound)
-        sound.play();
-
-
-    }
-
-
-    useEffect(() => {
-        if (auth.token) {
-            getMyMusic();
-
-        }
-
-    }, [auth.token]);
-    return (
-        <div>
-            <div>
-            <div className='home' style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-            <div style={layoutstyle}>
-                <div className="container-fluid">
-                    <div className="row">
-                        <div className="col-md-3 p-0">
-                            <Menu />
-                        </div>
-                        <div className="col-md-9 p-0 authmenu" style={{ height: '100%' }}>
-                            <AuthMenu />
-                           
-                            
-                            <main style={{ maxWidth: '98%',
-                             padding: '10px',
-                             
-                              }}>
-
-                               
-                                {children}
-
-
-
-                            </main> 
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {currentSong &&
-            <Footer />
-}
-
+        {/* Top Auth Menu */}
+        <div className="h-16 flex items-center justify-end px-6 border-b border-zinc-800 bg-zinc-950">
+          <AuthMenu />
         </div>
+
+        {/* Scrollable Page Content */}
+        <div
+          className={`flex-1 overflow-y-auto p-6 ${
+            currentSong ? "pb-24" : ""
+          }`}
+        >
+          {children}
         </div>
-            
-        </div>
-    );
+
+        {/* Footer Player */}
+        {currentSong && <Footer />}
+      </div>
+    </div>
+  );
 };
+
 export default MainLayout;
-
-
-
-
-
-
-
-

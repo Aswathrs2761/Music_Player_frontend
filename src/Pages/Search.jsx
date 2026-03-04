@@ -1,238 +1,181 @@
-import React, { useEffect, useState } from 'react';
-import MainLayout from '../Layout/MainLayout';
-import axios from 'axios';
-import { Backend_url } from '../utils/Config';
-import { Link, useNavigate } from 'react-router-dom';
-import { useCurrentSong } from '../Context/SongContext';
-import PlayListSongs from './PlayList/PlayListSongs';
-import { usePlayList } from '../Context/PlaylistContextProvider';
-import { FaHeart } from 'react-icons/fa';
-import { useAuth } from '../Context/AuthProvider';
-
-
+import React, { useEffect, useState } from "react";
+import MainLayout from "../Layout/MainLayout";
+import axios from "axios";
+import { Backend_url } from "../utils/Config";
+import { useNavigate } from "react-router-dom";
+import { useCurrentSong } from "../Context/SongContext";
+import { usePlayList } from "../Context/PlaylistContextProvider";
+import { FaHeart } from "react-icons/fa";
+import { useAuth } from "../Context/AuthProvider";
 
 const Search = () => {
-    const [searchText, setSearchText] = useState('');
-    const [searchResults, setSearchResults] = useState([]);
-    const [likedSongsId, setLikedSongsId] = useState([])
+  const [searchText, setSearchText] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [likedSongsId, setLikedSongsId] = useState([]);
 
+  const { setCurrentSong } = useCurrentSong();
+  const { setPlayListId } = usePlayList();
+  const [auth, setAuth] = useAuth();
 
-    const { setCurrentSong } = useCurrentSong();
-    const { setPlayListId } = usePlayList()
-    const [auth, setAuth] = useAuth()
+  const navigate = useNavigate();
 
+  /* ---------------- SEARCH ---------------- */
 
-
-
-    const [likedSongs, setLikedSongs] = useState([])
-
-    const navigate = useNavigate()
-
-
-    // getting text ,from search bar
-    const handleOnChange = async (e) => {
-        const value = e.target.value;
-        setSearchText(value);
-
-        searchSongs(value);
-    };
-
-
-    //search songs with given text
-
-    const searchSongs = async (text) => {
-        try {
-            const { data } = await axios.post(`${Backend_url}/api/song/search-songs`, { searchText: text });
-            console.log(data.result);
-            if (data.success) {
-                setSearchResults(data.result);
-            } else {
-                setSearchResults([]);
-            }
-        } catch (error) {
-            console.error('Error searching songs:', error);
-            setSearchResults([]);
-        }
-    };
-
-    // add or remove liked songs
-
-    const addOrRemoveLikes = async (newlikedarray) => {
-        try {
-            await axios.post(`${Backend_url}/api/user/addorremovelikes`, { newlikedarray })
-
-        }
-        catch (error) {
-            console.log(error);
-        }
+  const searchSongs = async (text) => {
+    if (!text.trim()) {
+      setSearchResults([]);
+      return;
     }
 
-    //getting already liked songs so that we can mark it as liked
+    try {
+      const { data } = await axios.post(
+        `${Backend_url}/api/song/search-songs`,
+        { searchText: text }
+      );
 
-    const getLikedSongs = async () => {
-        try {
-            const { data } = await axios.get(`${Backend_url}/api/user/getlikedsongs`);
+      if (data.success) {
+        setSearchResults(data.result);
+      } else {
+        setSearchResults([]);
+      }
+    } catch (error) {
+      setSearchResults([]);
+    }
+  };
 
-            setLikedSongs(data.userLikedSongs.likedSongs)
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    searchSongs(searchText);
+  };
 
-            const likedSongArray = data.userLikedSongs.likedSongs
+  /* ---------------- LIKES ---------------- */
 
-            if (likedSongArray.length > 0) {
-                var likedSongIds = likedSongArray.map(function (song) {
-                    return song._id;
-                });
-                setLikedSongsId(data => likedSongIds)
-            }
-        }
-        catch (error) {
-            console.log(error);
-        }
-    };
+  const addOrRemoveLikes = async (newlikedarray) => {
+    try {
+      await axios.post(
+        `${Backend_url}/api/user/addorremovelikes`,
+        { newlikedarray }
+      );
+    } catch (error) {}
+  };
 
+  const handleHeartClick = (e, songId) => {
+    e.stopPropagation();
 
+    const index = likedSongsId.indexOf(songId);
 
-    const handleHeartClick = (e, songId) => {
+    if (index === -1) {
+      const newLiked = [...likedSongsId, songId];
+      setLikedSongsId(newLiked);
+      addOrRemoveLikes(newLiked);
+    } else {
+      const updated = likedSongsId.filter((id) => id !== songId);
+      setLikedSongsId(updated);
+      addOrRemoveLikes(updated);
+    }
+  };
 
-        const index = likedSongsId.indexOf(songId);
-        e.stopPropagation();
+  /* ---------------- AUTH CHECK ---------------- */
 
-        if (index === -1) {
-            setLikedSongsId(prevLikedSongs => {
-                const newLikedSongs = [...prevLikedSongs, songId];
-                addOrRemoveLikes(newLikedSongs)
-                return newLikedSongs;
-            });
-        }
+  useEffect(() => {
+    if (!auth?.token) {
+      navigate("/login");
+    }
+  }, [auth, navigate]);
 
-        else {
-            const updatedLikedSongs = likedSongsId.filter((song, i) => i !== index);
-            setLikedSongsId(updatedLikedSongs); // Update likedSongs state
-            addOrRemoveLikes(updatedLikedSongs);
-        }
+  /* ---------------- UI ---------------- */
 
-    };
+  return (
+    <MainLayout>
+      <div className="min-h-screen bg-gradient-to-b from-black via-zinc-900 to-black px-6 py-12">
 
+        <div className="max-w-4xl mx-auto">
 
-    const handleCardClick = (song) => {
+          {/* SEARCH BAR */}
+          <form onSubmit={handleSubmit} className="mb-12">
+            <div className="flex items-center bg-zinc-800 rounded-full px-6 py-4 shadow-md focus-within:ring-2 ring-indigo-500 transition">
+              <input
+                type="text"
+                placeholder="Search songs or playlists..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className="bg-transparent flex-1 text-white placeholder-zinc-400 outline-none"
+              />
 
-        setCurrentSong(song);
-
-    };
-
-
-
-    useEffect(() => {
-        if (auth.token) {
-            getLikedSongs()
-        }
-
-        else {
-
-            const data = localStorage.getItem('auth')
-
-            if (data) {
-                const parseData = JSON.parse(data)
-                setAuth({
-                    ...auth,
-                    user: parseData.user,
-                    token: parseData.token
-                })
-
-            }
-
-            else {
-                if (confirm('Login to Continue')) {
-                    navigate('/login');
-                } else {
-                    navigate('/');
-                }
-
-            }
-        }
-
-    }, [auth])
-
-
-
-
-
-
-
-    return (
-        <MainLayout>
-            <div>
-                <input className='searchinput' size="40" type="text" placeholder="What do you want to listen?" value={searchText} onChange={handleOnChange} />
+              <button
+                type="submit"
+                className="ml-4 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-full text-sm transition"
+              >
+                Search
+              </button>
             </div>
+          </form>
 
-            <div className='container'>
-                {searchResults.length === 0 && searchText.trim() !== '' && (
-                    <div style={{ textAlign: 'center', marginTop: '100px' }}>
-                        <h3>No results found for "{searchText}"</h3>
-                        <h5>Please make sure your words are spelled correctly, or use fewer or different keywords.</h5>
-                    </div>
-                )}
-
-                {searchResults.length > 0 && (
-                    <div>
-                        {searchResults.map((item, index) => (
-                            <div key={index} onClick={() => {
-
-                                if (item.owner) {
-
-                                    localStorage.setItem('currentPlaylist', JSON.stringify(item._id));
-
-                                    setPlayListId(item._id)
-
-                                    navigate('/playlist-songs')
-
-                                }
-
-                                else {
-                                    handleCardClick(item)
-                                }
-
-                            }} style={{ textDecoration: 'none', color: 'inherit' }}>
-                                <div className="row songrow" style={{ alignItems: 'center', padding: '10px', borderRadius: '6px' }}>
-                                    <div className="col-2">
-                                        <img src={item.thumbNail} style={{ height: '40px', width: '40px' }} alt="Thumbnail" />
-                                    </div>
-
-                                    <div className="col-8">
-                                        <div className="row">
-                                            {(item?.name || '').length > 15
-                                                ?
-                                                <p style={{ paddingTop: '0px', margin: '0px', color: 'white' }}>{(item?.name || '').substring(0, 15)}...</p>
-                                                :
-                                                <p style={{ paddingTop: '0px', margin: '0px', color: 'white' }}>{(item?.name || '').substring(0, 15)}</p>
-                                            }
-                                        </div>
-                                    </div>
-
-                                    {!item.owner &&
-                                    <div className="col-2">
-
-                                        <FaHeart className='like'
-
-                                            onClick={(e) => {
-
-                                                handleHeartClick(e, item._id)
-
-                                            }}
-                                            style={{ color: likedSongsId.includes(item._id) ? 'red' : 'white' }}
-                                        />
-
-                                    </div>
-                                    }
-
-
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
+          {/* EMPTY STATE */}
+          {searchText && searchResults.length === 0 && (
+            <div className="text-center text-zinc-400 mt-20">
+              <h3 className="text-xl font-semibold mb-2">
+                No results found
+              </h3>
+              <p>
+                Try different keywords or check your spelling.
+              </p>
             </div>
-        </MainLayout>
-    );
+          )}
+
+          {/* RESULTS */}
+          <div className="space-y-4">
+            {searchResults.map((item) => (
+              <div
+                key={item._id}
+                onClick={() => {
+                  if (item.owner) {
+                    setPlayListId(item._id);
+                    navigate("/playlist-songs");
+                  } else {
+                    setCurrentSong(item);
+                  }
+                }}
+                className="group flex items-center gap-4 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-xl cursor-pointer transition shadow-sm hover:shadow-md"
+              >
+                {/* Thumbnail */}
+                <img
+                  src={item.thumbNail}
+                  alt={item.name}
+                  className="w-14 h-14 rounded-lg object-cover"
+                />
+
+                {/* Info */}
+                <div className="flex-1">
+                  <h3 className="text-white font-medium truncate">
+                    {item.name}
+                  </h3>
+                  <p className="text-zinc-400 text-sm truncate">
+                    {item.owner ? "Playlist" : "Song"}
+                  </p>
+                </div>
+
+                {/* Heart */}
+                {!item.owner && (
+                  <FaHeart
+                    onClick={(e) =>
+                      handleHeartClick(e, item._id)
+                    }
+                    className={`text-lg transition ${
+                      likedSongsId.includes(item._id)
+                        ? "text-red-500"
+                        : "text-zinc-400 hover:text-red-400"
+                    }`}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </div>
+    </MainLayout>
+  );
 };
 
 export default Search;

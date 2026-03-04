@@ -1,148 +1,135 @@
-import React, { useEffect, useState } from 'react';
-import MainLayout from '../Layout/MainLayout';
-import { useAuth } from '../Context/AuthProvider';
-import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { Backend_url } from '../utils/Config';
+import React, { useEffect, useState } from "react";
+import MainLayout from "../Layout/MainLayout";
+import { useAuth } from "../Context/AuthProvider";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { Backend_url } from "../utils/Config";
 import { FaHeart } from "react-icons/fa";
-import { usePlayList } from '../Context/PlaylistContextProvider';
+import { usePlayList } from "../Context/PlaylistContextProvider";
+import toast from "react-hot-toast";
 
 const MyLibrary = () => {
+  const [likedSongs, setLikedSongs] = useState([]);
+  const [likedPlaylists, setLikedPlaylists] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    const [likedSongs, setLikedSongs] = useState([])
-    const [likedPlaylistArray, setLikedPlaylistArray] = useState([])
+  const [auth] = useAuth();
+  const navigate = useNavigate();
+  const { setPlayListId } = usePlayList();
 
-    const navigate = useNavigate();
+  /* ---------------- FETCH DATA ---------------- */
 
-    const [auth, setAuth] = useAuth()
-    const { setPlayListId } = usePlayList()
+  const fetchLibrary = async () => {
+    try {
+      const [songsRes, playlistsRes] = await Promise.all([
+        axios.get(`${Backend_url}/api/user/getlikedsongs`),
+        axios.get(
+          `${Backend_url}/api/user/getlikedplaylistwithdetails`
+        ),
+      ]);
 
+      setLikedSongs(
+        songsRes.data.userLikedSongs?.likedSongs || []
+      );
 
-
-
-    const getLikedSongs = async () => {
-        try {
-            const { data } = await axios.get(`${Backend_url}/api/user/getlikedsongs`);
-            setLikedSongs(data.userLikedSongs.likedSongs);
-            console.log(data.userLikedSongs.likedSongs);
-
-        } catch (error) {
-            console.log(error);
-        }
+      setLikedPlaylists(
+        playlistsRes.data.LikedPlaylistId?.likedPlaylists || []
+      );
+    } catch {
+      toast.error("Failed to load library");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const getLikedPlayList = async () => {
-
-        try {
-            const { data } = await axios.get(`${Backend_url}/api/user/getlikedplaylistwithdetails`);
-
-            setLikedPlaylistArray(data.LikedPlaylistId.likedPlaylists)
-
-        }
-
-        catch (error) {
-            console.log(error);
-        }
+  useEffect(() => {
+    if (auth?.token) {
+      fetchLibrary();
     }
+  }, [auth?.token]);
 
-    useEffect(() => {
+  /* ---------------- UI ---------------- */
 
-        if (auth.token) {
-            getLikedSongs()
-            getLikedPlayList()
-        }
-        else {
+  return (
+    <MainLayout>
+      <div className="max-w-6xl mx-auto space-y-12">
 
-            const data = localStorage.getItem('auth')
+        <h1 className="text-3xl font-bold">
+          📚 Your Library
+        </h1>
 
-            if (data) {
-                const parseData = JSON.parse(data)
-                setAuth({
-                    ...auth,
-                    user: parseData.user,
-                    token: parseData.token
-                })
+        {loading && (
+          <p className="text-zinc-500">
+            Loading library...
+          </p>
+        )}
 
-            }
-
-            else {
-                if (confirm('Login to Continue')) {
-                    navigate('/login');
-                } else {
-                    navigate('/');
-                }
-
-            }
-        }
-
-    }, [auth])
-
-    return (
-        <MainLayout>
-            <Link to='/likedsongs' style={{ textDecoration: 'none' }}>
-                <div className='row  likedsongrow' style={{ padding: '10px 0px', alignItems: 'center' }}>
-
-                    <div className='col-3'>
-                        <FaHeart style={{ borderRadius: '5px', fontSize: '50px', color: "white", background: 'linear-gradient(to right, #055378, #B1CDDA)',marginLeft:'10px', padding: '15px' }} />
-                    </div>
-
-                    <div className='col' style={{ color: 'white', fontWeight: 'bold' }}>
-                        LIKED SONGS : {likedSongs.length}
-                    </div>
-
-                </div>
-
-            </Link>
-
+        {/* LIKED SONGS CARD */}
+        {!loading && (
+          <div
+            onClick={() => navigate("/likedsongs")}
+            className="flex items-center gap-6 bg-gradient-to-r from-indigo-600 to-purple-600 p-6 rounded-2xl cursor-pointer shadow-xl hover:scale-[1.02] transition"
+          >
+            <FaHeart className="text-white text-4xl" />
             <div>
-                {likedPlaylistArray.length > 0 ? 
-                <div>
-
-                    <p style={{marginTop : '20px',fontSize:'20px',fontWeight:'bold'}}>Liked Playlists</p>
-
-<div >
-                        {likedPlaylistArray.map((item, index) => (
-
-                            <div key={index}  onClick={(e) => { 
-                                localStorage.setItem('currentPlaylist', JSON.stringify(item._id));
-
-                                    setPlayListId(item._id)
-
-                                    navigate('/playlist-songs')
-                                }}
-
-                                
-                                style={{ textDecoration: 'none', color: 'inherit' }}>
-                                <div className="row songrow" style={{ alignItems: 'center', padding: '10px', borderRadius: '6px' }}>
-                                    <div className="col-3">
-                                        <img src={item.thumbNail} style={{ height: '50px', width: '50px',borderRadius:'5px' }} alt="Thumbnail"></img>
-                                    </div>
-                                    <div className="col">
-                                    {(item?.name || '').length > 10 ? 
-                                        <p style={{paddingTop: '0px', margin: '0px', color: 'white' , fontWeight: 'bold',fontSize: '20px' }}> {(item?.name || '').substring(0,10)}...</p> 
-                                        :
-                                        <p  style={{paddingTop: '0px', margin: '0px', color: 'white', fontWeight: 'bold',fontSize: '20px' }}> {(item?.name || '').substring(0,10)}</p> 
-                                        } 
-
-                                    
-                                
-                                        
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-                :
-                <div>
-                    <p style={{marginTop : '20px',fontSize:'20px',fontWeight:'bold'}}>No liked PlayList</p>
-                </div>
-                }
+              <h2 className="text-xl font-semibold text-white">
+                Liked Songs
+              </h2>
+              <p className="text-indigo-100 text-sm">
+                {likedSongs.length} songs
+              </p>
             </div>
+          </div>
+        )}
 
+        {/* LIKED PLAYLISTS */}
+        <div>
+          <h2 className="text-2xl font-semibold mb-6">
+            Liked Playlists
+          </h2>
 
-        </MainLayout>
-    );
+          {likedPlaylists.length === 0 ? (
+            <p className="text-zinc-500">
+              You haven’t liked any playlists yet.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {likedPlaylists.map((playlist) => (
+                <div
+                  key={playlist._id}
+                  onClick={() => {
+                    localStorage.setItem(
+                      "currentPlaylist",
+                      JSON.stringify(playlist._id)
+                    );
+                    setPlayListId(playlist._id);
+                    navigate("/playlist-songs");
+                  }}
+                  className="flex items-center gap-4 bg-zinc-900 hover:bg-zinc-800 p-4 rounded-lg transition cursor-pointer"
+                >
+                  <img
+                    src={playlist.thumbNail}
+                    alt={playlist.name}
+                    className="w-14 h-14 rounded-md object-cover"
+                  />
+
+                  <div>
+                    <p className="text-white font-medium truncate max-w-xs">
+                      {playlist.name}
+                    </p>
+                    <p className="text-sm text-zinc-400">
+                      Playlist
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+      </div>
+    </MainLayout>
+  );
 };
 
 export default MyLibrary;

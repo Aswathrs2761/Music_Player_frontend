@@ -1,171 +1,213 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import Menu from '../../Layout/Menu';
-import AuthMenu from '../../Layout/AuthMenu';
-import axios from 'axios';
-import { Backend_url } from '../../utils/Config';
-import { useAuth } from '../../Context/AuthProvider';
-import { Howl, Howler } from 'howler';
-import { Navigate } from 'react-router-dom';
-import MainLayout from '../../Layout/MainLayout';
-import { useCurrentSong } from '../../Context/SongContext.jsx';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Backend_url } from "../../utils/Config";
+import { useNavigate } from "react-router-dom";
+import MainLayout from "../../Layout/MainLayout";
+import { useAuth } from "../../Context/AuthProvider";
+import { useCurrentSong } from "../../Context/SongContext";
+import { Trash2 } from "lucide-react";
+import { FaHeart } from "react-icons/fa";
+import toast from "react-hot-toast";
 
 const Mymusic = () => {
-    const [auth, setAuth] = useAuth();
-    const [myMusic, setMyMusic] = useState([]);
-    const [nowPlayingSong, setNowPlayingSong] = useState(null);
+  const [auth] = useAuth();
+  const [myMusic, setMyMusic] = useState([]);
+  const [likedSongsId, setLikedSongsId] = useState([]);
 
+  const navigate = useNavigate();
+  const { setCurrentSong, setAllSongs } = useCurrentSong();
 
-    const navigate = useNavigate()
+  /* ---------------- FETCH MY SONGS ---------------- */
 
-    const {currentSong, setCurrentSong,allSongs, setAllSongs} = useCurrentSong()
-    
+  const getMyMusic = async () => {
+    try {
+      const res = await axios.get(
+        `${Backend_url}/api/song/get-mysong`
+      );
 
-    const getMyMusic = async () => {
-        try 
-        {
-            const res = await axios.get(`${Backend_url}/api/song/get-mysong`);
-            if (res.data.success === false) 
-            {                 
-                alert(res.data.message)
-                navigate('/')
-                return
-                
-            } 
-            else {
-            setMyMusic(res.data.mySongs);
+      if (!res.data.success) {
+        toast.error(res.data.message);
+        navigate("/");
+        return;
+      }
 
-            setAllSongs(res.data.mySongs);
-
-                
-            }
-            
-        } 
-        catch (error) 
-        {
-            console.log(error);
-        }
-    };
-
-   const deleteSong = async(id)=>{
-
-    var result = confirm("Do you want to delete?");
-    if (result) {
-        try 
-        {
-            await axios.get(`${Backend_url}/api/song/deletesongbyid/${id}`);
-
-            getMyMusic()
-            setCurrentSong({})
-        } 
-        catch (error) 
-        {
-            console.log(error);            
-        }
-} 
-        
-
+      setMyMusic(res.data.mySongs);
+      setAllSongs(res.data.mySongs);
+    } catch {
+      toast.error("Failed to load songs");
     }
-    
+  };
 
+  /* ---------------- FETCH LIKED SONGS ---------------- */
 
+  const getLikedSongs = async () => {
+    try {
+      const { data } = await axios.get(
+        `${Backend_url}/api/user/getlikedsongs`
+      );
 
+      const likedIds =
+        data.userLikedSongs?.likedSongs?.map((s) => s._id) || [];
 
-    useEffect(() => {
-        if (auth.token) {
-            getMyMusic();
-        }
+      setLikedSongsId(likedIds);
+    } catch {
+      console.log("Failed to load liked songs");
+    }
+  };
 
-        else {
+  /* ---------------- TOGGLE LIKE ---------------- */
 
-            const data = localStorage.getItem('auth')
+  const toggleLike = async (songId) => {
+    let updated;
 
-            if (data) {
-                const parseData = JSON.parse(data)
-                setAuth({
-                    ...auth,
-                    user: parseData.user,
-                    token: parseData.token
-                })
+    if (likedSongsId.includes(songId)) {
+      updated = likedSongsId.filter((id) => id !== songId);
+    } else {
+      updated = [...likedSongsId, songId];
+    }
 
-            }
+    setLikedSongsId(updated);
 
-            else {
-                if (confirm('Login to Continue')) {
-                    navigate('/login');
-                } else {
-                    navigate('/');
-                }
+    try {
+      await axios.post(
+        `${Backend_url}/api/user/addorremovelikes`,
+        { newlikedarray: updated }
+      );
+    } catch {
+      toast.error("Failed to update like");
+    }
+  };
 
-            }
-        }
+  /* ---------------- DELETE SONG ---------------- */
 
-    }, [auth])
-
-    return (
-
-       <MainLayout>
-        <div >
-                        <h3 style={{ color: 'white', marginLeft: '20px' }}>My Songs</h3>
-                    </div>
-                    <div className='container'>
-                        {myMusic.map((item, index) => (
-
-                            <Link key={index}  onClick={(e) => { 
-                                if (!e.target.classList.contains('delete-button')) 
-                                {                                   
-                                    setCurrentSong(item); 
-                                }
-                                else
-                                {                                        
-                                    deleteSong(item._id)
-                    
-                                } 
-                            }
-                        }
-                                
-                                style={{ textDecoration: 'none', color: 'inherit' }}>
-                                <div className="row songrow" style={{ alignItems: 'center', padding: '10px', borderRadius: '6px' }}>
-                                    <div className="col-2">
-                                        <img src={item.thumbNail} style={{ height: '40px', width: '40px' }} alt="Thumbnail"></img>
-                                    </div>
-                                    <div className="col-6">
-                                    {(item?.name || '').length > 12 ? 
-                                        <p style={{paddingTop: '0px', margin: '0px', color: 'white' }}> {(item?.name || '').substring(0,12)}...</p> 
-                                        :
-                                        <p  style={{paddingTop: '0px', margin: '0px', color: 'white' }}> {(item?.name || '').substring(0,12)}</p> 
-                                        } 
-
-                                    {(item?.artist?.userName || '').length > 12 ? 
-                                        <p style={{paddingTop: '0px', margin: '0px', color: 'white' }}> {(item?.artist?.userName || '').substring(0,12)}...</p> 
-                                        :
-                                        <p  style={{paddingTop: '0px', margin: '0px', color: 'white' }}> {(item?.artist?.userName || '').substring(0,12)}</p> 
-                                        } 
-                                
-                                        
-                                    </div>
-                                    
-                                    <div className='col-1'>
-                                       {item.duration}
-                                    </div>
-
-                                    <div className='col-2'>
-                                    <button className='delete-button' 
-                                    style={{ borderColor: "white", borderRadius: "20px", padding: "6px 12px", fontSize: '14px', color: 'white',marginLeft:'10px', backgroundColor: 'black' }}>
-    delete
-</button>
-</div>
-
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-
-
-       </MainLayout>
-                    
-               
+  const deleteSong = async (id) => {
+    const confirmDelete = window.confirm(
+      "Do you want to delete this song?"
     );
+
+    if (!confirmDelete) return;
+
+    try {
+      await axios.get(
+        `${Backend_url}/api/song/deletesongbyid/${id}`
+      );
+
+      toast.success("Song deleted");
+      getMyMusic();
+      setCurrentSong(null);
+    } catch {
+      toast.error("Delete failed");
+    }
+  };
+
+  /* ---------------- AUTH CHECK ---------------- */
+
+  useEffect(() => {
+    if (auth?.token) {
+      getMyMusic();
+      getLikedSongs();
+    } else {
+      navigate("/login");
+    }
+  }, [auth?.token]);
+
+  /* ---------------- UI ---------------- */
+
+  return (
+    <MainLayout>
+      <div className="max-w-5xl mx-auto px-6 py-10">
+
+        <h1 className="text-3xl font-bold text-white mb-10">
+          🎵 My Songs
+        </h1>
+
+        {myMusic.length === 0 && (
+          <div className="text-zinc-400 text-center py-20">
+            No songs uploaded yet.
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {myMusic.map((item) => (
+            <div
+              key={item._id}
+              onClick={() => setCurrentSong(item)}
+              className="
+                flex items-center justify-between
+                bg-zinc-900 hover:bg-zinc-800
+                p-4 rounded-xl
+                transition-all duration-200
+                cursor-pointer
+              "
+            >
+              {/* LEFT */}
+              <div className="flex items-center gap-4">
+                <img
+                  src={item.thumbNail}
+                  alt={item.name}
+                  className="w-14 h-14 rounded-lg object-cover shadow-md"
+                />
+
+                <div>
+                  <p className="text-white font-medium">
+                    {item.name.length > 20
+                      ? item.name.substring(0, 20) + "..."
+                      : item.name}
+                  </p>
+
+                  {/* <p className="text-sm text-zinc-400">
+                    {item.artist?.userName}
+                  </p> */}
+                </div>
+              </div>
+
+              {/* RIGHT */}
+              <div className="flex items-center gap-6">
+
+                <span className="text-zinc-400 text-sm">
+                  {item.duration}
+                </span>
+
+                {/* LIKE */}
+                <FaHeart
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleLike(item._id);
+                  }}
+                  size={18}
+                  className="transition cursor-pointer"
+                  color={
+                    likedSongsId.includes(item._id)
+                      ? "red"
+                      : "#71717a"
+                  }
+                />
+
+                {/* DELETE */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteSong(item._id);
+                  }}
+                  className="
+                    p-2 rounded-full
+                    hover:bg-red-600/20
+                    text-red-400
+                    hover:text-red-500
+                    transition
+                  "
+                >
+                  <Trash2 size={18} />
+                </button>
+
+              </div>
+            </div>
+          ))}
+        </div>
+
+      </div>
+    </MainLayout>
+  );
 };
 
 export default Mymusic;

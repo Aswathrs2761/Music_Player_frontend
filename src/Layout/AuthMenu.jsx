@@ -1,78 +1,173 @@
-import React, { useEffect, useState } from 'react';
-import { IoIosArrowForward } from "react-icons/io";
-import { IoIosArrowBack } from "react-icons/io";
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../Context/AuthProvider';
-
-
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../Context/AuthProvider";
+import { ChevronDown } from "lucide-react";
 
 const AuthMenu = () => {
-      const navigate = useNavigate()
+  const navigate = useNavigate();
+  const [auth] = useAuth();
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
-      const [auth,setAuth] = useAuth()
-      const [profileLetter,setProfileLetter]=useState("")
-        
-    return (
-        <div className='row Authmenu'>
-      {/* <div className='col-6 d-flex justify-content-start'>
-        <button className='forward-backward-button mr-2'><IoIosArrowBack /></button>
-        <button className='forward-backward-button mr-auto'><IoIosArrowForward /></button>
-      </div> */}
-      <div className=' d-flex justify-content-end'>
+  const profileLetter =
+    auth?.user?.userName?.charAt(0)?.toUpperCase() || "A";
 
-        {auth.token ? 
-        <div style={{display : 'flex',justifyContent : 'flex-end',alignItems : 'center'}}>
-        <div className="btn-group">
-  <button   data-bs-toggle="dropdown" aria-expanded="false" style={{fontSize:'20px',fontWeight: 'bolder',marginRight:'25px', padding : '13px 18px',border : 'none',borderRadius : '30px'}}>
-  Ac
-  </button>
-  <ul className="dropdown-menu">
-    <li><Link className="dropdown-item" to='/uploadsong' style={{fontWeight:'bold',padding: '10px 15px'}}>Upload song</Link></li>
-    <li><Link className="dropdown-item" to="/logout" style={{fontWeight:'bold',padding: '10px 15px'}}>Log out</Link></li>
-  </ul>
-</div>
-</div>
-:  
-<div>
-<button id='signup' className='mr-2' onClick={()=>{navigate('/signup')}}>Sign up</button>
-<button id='login' onClick={()=>{navigate('/login')}}>Log in</button> 
-</div>
-}
-        
-        
-        
-      </div>
+  /* -------- Close on Outside Click -------- */
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="flex justify-end items-center relative">
+
+      {auth?.token ? (
+        <div className="relative" ref={dropdownRef}>
+
+          {/* Avatar Button */}
+          <button
+            onClick={() => setOpen(!open)}
+            className="
+              flex items-center gap-3
+              bg-zinc-900/80 backdrop-blur-md
+              border border-zinc-800
+              px-3 py-2 rounded-full
+              hover:border-indigo-500/40
+              hover:bg-zinc-800
+              transition-all duration-300
+            "
+          >
+            <div
+              className="
+                w-9 h-9 rounded-full
+                bg-gradient-to-br from-indigo-500 to-purple-600
+                flex items-center justify-center
+                text-white font-semibold text-sm
+                shadow-md
+              "
+            >
+              {profileLetter}
+            </div>
+
+            <ChevronDown
+              size={16}
+              className={`text-zinc-400 transition-transform duration-300 ${
+                open ? "rotate-180 text-white" : ""
+              }`}
+            />
+          </button>
+
+          {/* Dropdown */}
+          <div
+            className={`
+              absolute right-0 mt-4 w-60
+              bg-zinc-900/95 backdrop-blur-xl
+              border border-zinc-800
+              rounded-2xl shadow-2xl
+              overflow-hidden
+              transition-all duration-200 origin-top
+              z-50
+              ${
+                open
+                  ? "opacity-100 scale-100 translate-y-0"
+                  : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+              }
+            `}
+          >
+
+            {/* User Info */}
+            <div className="px-5 py-4 border-b border-zinc-800">
+              <p className="text-white font-medium text-sm">
+                {auth?.user?.userName}
+              </p>
+              <p className="text-zinc-400 text-xs mt-1">
+                {auth?.user?.email}
+              </p>
+            </div>
+
+            {/* Menu Links */}
+            <div className="py-2">
+
+              <Link
+                to="/uploadsong"
+                onClick={() => setOpen(false)}
+                className="
+                  block px-5 py-3 text-sm
+                  text-zinc-300
+                  hover:bg-zinc-800
+                  hover:text-white
+                  transition
+                  no-underline
+                "
+              >
+                Upload Song
+              </Link>
+
+              <Link
+                to="/logout"
+                onClick={() => setOpen(false)}
+                className="
+                  block px-5 py-3 text-sm
+                  text-red-400
+                  hover:bg-red-600/10
+                  hover:text-red-500
+                  transition
+                  no-underline
+                "
+              >
+                Log Out
+              </Link>
+
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex gap-4">
+
+          <button
+            onClick={() => navigate("/signup")}
+            className="
+              px-5 py-2
+              border border-zinc-800
+              text-zinc-300
+              rounded-lg
+              hover:border-indigo-500/40
+              hover:text-white
+              transition
+            "
+          >
+            Sign Up
+          </button>
+
+          <button
+            onClick={() => navigate("/login")}
+            className="
+              px-5 py-2
+              bg-gradient-to-r from-indigo-500 to-purple-600
+              hover:opacity-90
+              text-white font-medium
+              rounded-lg
+              transition
+              shadow-lg
+            "
+          >
+            Log In
+          </button>
+
+        </div>
+      )}
     </div>
-    );
+  );
 };
 
 export default AuthMenu;
-
-
-{/* <div className="row">
-<div className="col-sm-4">                    
-<button className='forward-backward-button'><IoIosArrowBack /></button>
-</div>
-<div className="col-sm-4">                    
-<button className='forward-backward-button'><IoIosArrowForward /></button>
-</div>
-</div> */}
-
-
-{/* */}
-
-{/*   */}
-
-
-    // <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-    //     <li class="nav-item">
-    //     <button id='signup'>Sign up</button>
-          
-    //     </li>
-    //     <li class="nav-item">
-   
-    //     <button id='login'>Log in</button>
-          
-    //     </li>
-    //    </ul> 

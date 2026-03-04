@@ -1,129 +1,140 @@
-import React, { useEffect, useState } from 'react';
-import MainLayout from '../../Layout/MainLayout';
-import axios from 'axios';
-import { Backend_url } from '../../utils/Config';
-import { useAuth } from '../../Context/AuthProvider';
-import { Link, useNavigate } from 'react-router-dom';
-
+import React, { useEffect, useState } from "react";
+import MainLayout from "../../Layout/MainLayout";
+import axios from "axios";
+import { Backend_url } from "../../utils/Config";
+import { useAuth } from "../../Context/AuthProvider";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import { Trash2 } from "lucide-react";
 
 const MyPlaylistPage = () => {
+  const [myPlaylist, setMyPlaylist] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    const [myPlaylist, setMyPlaylist] = useState()
-    const [auth,setAuth] = useAuth()
+  const [auth, setAuth] = useAuth();
+  const navigate = useNavigate();
 
-    const navigate = useNavigate()
+  /* ---------------- FETCH PLAYLISTS ---------------- */
 
+  const getMyPlaylists = async () => {
+    try {
+      const { data } = await axios.get(
+        `${Backend_url}/api/playlist/getplaylist/artist`
+      );
 
-    const getMyPlaylists = async( ) =>{
-       try {
-            const { data } = await axios.get(`${Backend_url}/api/playlist/getplaylist/artist`)
-            setMyPlaylist(value =>data.playList)
-          
-       } 
-       catch (error) 
-       {
-            console.log(error)
-       }
+      setMyPlaylist(data.playList || []);
+    } catch (error) {
+      toast.error("Failed to load playlists");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const deletePlaylist = async (id) =>{
-        try
-        {
-            await axios.delete(`${Backend_url}/api/playlist/deleteplaylist/${id}`)
-            
-            getMyPlaylists()
+  /* ---------------- DELETE ---------------- */
 
+  const deletePlaylist = async (id) => {
+    try {
+      await axios.delete(
+        `${Backend_url}/api/playlist/deleteplaylist/${id}`
+      );
 
-        }
-        catch (error) 
-       {
-            console.log(error)
-       }
+      setMyPlaylist((prev) =>
+        prev.filter((playlist) => playlist._id !== id)
+      );
 
+      toast.success("Playlist deleted");
+    } catch {
+      toast.error("Delete failed");
     }
+  };
 
+  /* ---------------- AUTH CHECK ---------------- */
 
-    useEffect(() => {
-        if (auth.token) {
-            getMyPlaylists()
-        }
+  useEffect(() => {
+    if (auth?.token) {
+      getMyPlaylists();
+    } else {
+      const localData = localStorage.getItem("auth");
 
-        else {
+      if (localData) {
+        const parsed = JSON.parse(localData);
+        setAuth({
+          ...auth,
+          user: parsed.user,
+          token: parsed.token,
+        });
+      } else {
+        navigate("/login");
+      }
+    }
+  }, [auth?.token]);
 
-            const data = localStorage.getItem('auth')
+  /* ---------------- UI ---------------- */
 
-            if (data) {
-                const parseData = JSON.parse(data)
-                setAuth({
-                    ...auth,
-                    user: parseData.user,
-                    token: parseData.token
-                })
+  return (
+    <MainLayout>
+      <div className="max-w-7xl mx-auto">
 
-            }
+        <h1 className="text-2xl font-bold mb-8">
+          My Playlists
+        </h1>
 
-            else {
-                if (confirm('Login to Continue')) {
-                    navigate('/login');
-                } else {
-                    navigate('/');
-                }
+        {loading && (
+          <p className="text-zinc-400">
+            Loading playlists...
+          </p>
+        )}
 
-            }
-        }
+        {!loading && myPlaylist.length === 0 && (
+          <p className="text-zinc-500">
+            You haven’t created any playlists yet.
+          </p>
+        )}
 
-    }, [auth,myPlaylist])
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
 
+          {myPlaylist.map((playlist) => (
+            <div
+              key={playlist._id}
+              className="bg-zinc-900 hover:bg-zinc-800 transition rounded-xl p-4 group relative"
+            >
+              {/* Delete Button */}
+              <button
+                onClick={() => deletePlaylist(playlist._id)}
+                className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition text-red-500 hover:text-red-400"
+              >
+                <Trash2 size={18} />
+              </button>
 
-    return (
-       <MainLayout>
-       
-        <div className="row">
-    <div className='d-flex flex-wrap ' style={{ justifyContent: 'space-evenly', width: '100%' }}>
-    {myPlaylist?.map((playList, index) => (
-    <div key={index} onClick={(e) => {
-        const targetClassList = e.target.classList;
-        if (targetClassList.contains('delete-button')) 
-            {
-                if (confirm('Do You want to delete')) 
-                    {
-                        deletePlaylist(playList._id);
-                    } 
-
-                
-            } 
-        else {
-            localStorage.setItem('currentPlaylist', JSON.stringify(playList._id));
-            navigate('/playlistsongs');
-        }
-    }} style={{ textDecoration: 'none', color: 'inherit' }}>
-        <div className="card m-2 col-lg-2 songcard" style={{ backgroundColor: 'white',border:'none', borderRadius: '20px', width: '12rem',height: '15rem' }}>
-            <div className="card-inner" style={{ height: '10rem' }}>
-                <img src={playList.thumbNail} className="card-img" alt={playList.name} width={'60px'} height={'175px'} style={{ borderRadius: '20px' }} />
-            </div>
-            <div className="card-body" style={{ backgroundColor: 'black', color: 'grey', textAlign: 'center' }}>
-                {(playList?.name || '').length > 10 ?
-                    <p className="card-text" style={{ color: 'white', fontSize: '18px', fontWeight: 'bold', marginBottom: '5px' }}> {(playList?.name || '').substring(0, 10)}...</p>
-                    :
-                    <p className="card-text" style={{ color: 'white', fontSize: '18px', fontWeight: 'bold', marginBottom: '5px' }}> {(playList?.name || '').substring(0, 10)}</p>
-                }
-                <div>
-                
-
-                    <button className='delete-button' style={{ borderColor: "white", borderRadius: "20px", padding: "6px 15px", fontSize: '14px',marginTop:'10px', color: 'white', backgroundColor: 'black' }}>
-                        delete
-                    </button>
+              {/* Click Area */}
+              <div
+                onClick={() => {
+                  localStorage.setItem(
+                    "currentPlaylist",
+                    JSON.stringify(playlist._id)
+                  );
+                  navigate("/playlistsongs");
+                }}
+                className="cursor-pointer"
+              >
+                <div className="aspect-square overflow-hidden rounded-lg mb-3">
+                  <img
+                    src={playlist.thumbNail}
+                    alt={playlist.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                  />
                 </div>
-            </div>
-        </div>
-    </div>
-))}
-    
-    </div>
-</div>
 
-       </MainLayout>
-    );
+                <h3 className="text-white font-semibold text-sm truncate">
+                  {playlist.name}
+                </h3>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </MainLayout>
+  );
 };
 
 export default MyPlaylistPage;

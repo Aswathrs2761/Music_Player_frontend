@@ -1,89 +1,95 @@
-import React, { useEffect, useState } from 'react';
-import MainLayout from '../../Layout/MainLayout';
-import axios from 'axios';
-import { Backend_url } from '../../utils/Config';
-import { Link, useNavigate } from 'react-router-dom';
-import { useCurrentSong } from '../../Context/SongContext';
-import { usePlayList } from '../../Context/PlaylistContextProvider';
+import React, { useEffect, useState } from "react";
+import MainLayout from "../../Layout/MainLayout";
+import axios from "axios";
+import { Backend_url } from "../../utils/Config";
+import { useNavigate } from "react-router-dom";
+import { usePlayList } from "../../Context/PlaylistContextProvider";
+import toast from "react-hot-toast";
 
 const AllPlaylist = () => {
+  const navigate = useNavigate();
+  const { setPlayListId } = usePlayList();
 
-    
-    const navigate = useNavigate();
+  const [allPlaylists, setAllPlaylists] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    const { setPlayListId } = usePlayList()
+  const getAllPlaylist = async () => {
+    try {
+      const { data } = await axios.get(
+        `${Backend_url}/api/playlist/getallplaylist`
+      );
 
-    const [allPlaylists, setAllPlaylists] = useState()
-
-   const getAllPlaylist = async() =>
-    { 
-        try {
-            const {data} = await axios.get(`${Backend_url}/api/playlist/getallplaylist`)
-            setAllPlaylists(data.playlist);
-        }
-        catch (error) {
-            console.log(error);
-        }
-
+      setAllPlaylists(data.playlist || []);
+    } catch (error) {
+      toast.error("Failed to load playlists");
+    } finally {
+      setLoading(false);
     }
+  };
 
-   
+  useEffect(() => {
+    getAllPlaylist();
+  }, []);
 
-    useEffect(()=>{
-        getAllPlaylist()
-    },[])
+  return (
+    <MainLayout>
+      <div className="max-w-7xl mx-auto">
 
-    return (
-        <MainLayout>
-        <div style={{fontSize: '22px', fontWeight : 'bold',marginBottom: '20px'}}>
-            All Playlists
-        </div>              
-        <div className="row">
+        {/* Page Header */}
+        <h1 className="text-2xl font-bold mb-6">
+          All Playlists
+        </h1>
 
-            <div className='d-flex flex-wrap ' style={{ justifyContent: 'space-evenly', width: '100%' }}>
-                {allPlaylists?.map((playlist, index) => (
-                    <div onClick={() => {
-                            localStorage.setItem('currentPlaylist', JSON.stringify(playlist._id));
+        {/* Loading State */}
+        {loading && (
+          <div className="text-zinc-400">
+            Loading playlists...
+          </div>
+        )}
 
-                            setPlayListId(playlist._id)
+        {/* Empty State */}
+        {!loading && allPlaylists.length === 0 && (
+          <div className="text-zinc-500">
+            No playlists available.
+          </div>
+        )}
 
-                            navigate('/playlist-songs')
+        {/* Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
 
-                        }} 
-                        key={index} className="card m-2 col-xl-1 songcard" style={{backgroundColor: 'black', borderRadius: '20px', border : 'none',width: '10rem' }}>
+          {allPlaylists.map((playlist) => (
+            <div
+              key={playlist._id}
+              onClick={() => {
+                localStorage.setItem(
+                  "currentPlaylist",
+                  JSON.stringify(playlist._id)
+                );
+                setPlayListId(playlist._id);
+                navigate("/playlist-songs");
+              }}
+              className="bg-zinc-900 hover:bg-zinc-800 transition-all duration-300 rounded-xl p-4 cursor-pointer group"
+            >
+              {/* Image */}
+              <div className="aspect-square overflow-hidden rounded-lg mb-3">
+                <img
+                  src={playlist.thumbNail}
+                  alt={playlist.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                />
+              </div>
 
-                        <div className="card-inner">
-                            <img src={playlist.thumbNail}
-                                className="card-img "
-                                alt={playlist.name}
-                                height={'200px'} width={'60px'} 
-                                style={{borderRadius : '20px'}}/>
-                        </div>
-                        <div className="card-body" style={{backgroundColor:'black', color: 'grey' }} >
-                        
-                                
-                                {(playlist?.name || '').length > 12 ? 
-                                <p className="card-text" style={{textAlign: 'center',color:'white', fontSize: '16px', fontWeight: 'bold',marginBottom : '5px'}}> {(playlist?.name || '').substring(0,12)}...</p> 
-                                :
-                                <p className="card-text" style={{textAlign: 'center',color:'white', fontSize: '16px', fontWeight: 'bold',marginBottom : '5px' }}> {(playlist?.name || '').substring(0,12)}</p> 
-                                }
-                                              
-
-                        </div>
-
-                    </div>
-                ))}
+              {/* Title */}
+              <h3 className="text-white font-semibold text-sm truncate">
+                {playlist.name}
+              </h3>
             </div>
+          ))}
+
         </div>
-    
-</MainLayout>
-    );
+      </div>
+    </MainLayout>
+  );
 };
 
 export default AllPlaylist;
-
-
-
-
-
-

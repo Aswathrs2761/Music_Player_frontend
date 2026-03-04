@@ -247,106 +247,100 @@ const Footer = () => {
 
 
 
-    return (
-        <>
-            {currentSong && currentSong.name && currentSong.artist &&
-                <div style={{ height: '10%' }}>
-                    <div className='container' >
+   return (
+  <>
+    {currentSong && currentSong.name && currentSong.artist && (
+      <div className="fixed bottom-0 left-0 w-full bg-zinc-950 border-t border-zinc-800 px-6 py-3">
+        <div className="flex items-center justify-between">
 
-                        <div style={{ justifyContent: 'space-between', alignItems: 'center',padding: '10px', borderRadius: '6px' }}>
-                            <div className="row" style={{ alignItems: 'center' }}>
-                                <div className='col-2'>
-                                    <img src={currentSong.thumbNail} style={{ height: '40px', width: '40px' }} alt="Thumbnail"></img>
-                                </div>
+          {/* Left - Song Info */}
+          <div className="flex items-center gap-4 w-1/4">
+            <img
+              src={currentSong.thumbNail}
+              alt="thumbnail"
+              className="w-12 h-12 rounded-md object-cover"
+            />
 
-                                <div className='col-2' >
-                                    <div className="row">
-                                        {(currentSong?.name || '').length > 9 ?
-                                            <p style={{ fontSize: '14px', fontWeight: 'bold', padding: '0px', margin: '0px', color: 'white' }}>{(currentSong?.name || '').substring(0, 9)}...</p>
-                                            :
-                                            <p style={{ fontSize: '14px', fontWeight: 'bold', padding: '0px', margin: '0px', color: 'white' }}> {(currentSong?.name || '').substring(0, 9)}</p>
-                                        }
+            <div>
+              <p className="text-white text-sm font-medium truncate max-w-[150px]">
+                {currentSong.name}
+              </p>
+              <p className="text-zinc-400 text-xs truncate max-w-[150px]">
+                {currentSong.artist?.userName}
+              </p>
+            </div>
+          </div>
 
-                                    </div>
+          {/* Center - Controls */}
+          <div className="flex flex-col items-center gap-2 w-2/4">
 
+            <div className="flex items-center gap-6 text-zinc-400">
 
-                                    <div className="row" style={{ alignItems: 'center' }}>
-                                        {(currentSong?.artist?.userName || '').length > 11 ?
-                                            <p style={{ fontSize: '10px', padding: '0px', margin: '0px', color: 'whitesmoke' }}>{(currentSong?.artist?.userName || '').substring(0, 11)}...</p>
-                                            :
-                                            <p style={{ fontSize: '10px', padding: '0px', margin: '0px', color: 'whitesmoke' }}>{(currentSong?.artist?.userName || '').substring(0, 11)}</p>
-                                        }
-                                    </div>
-                                </div>
+              {/* Shuffle */}
+              <LuShuffle
+                onClick={shuffle}
+                className="cursor-pointer hover:text-indigo-400 transition"
+                size={18}
+              />
 
-                                <div className='col-2'>
-                                    <p style={{color:'white',fontSize:'15px',marginLeft:'10px',alignItems: 'center' }}>{currentSong.duration}</p>
-                                </div>                                
+              {/* Previous */}
+              <MdOutlineSkipPrevious
+                onClick={previousSong}
+                className="cursor-pointer hover:text-white transition"
+                size={22}
+              />
 
+              {/* Play / Pause */}
+              {isPaused ? (
+                <FaCirclePlay
+                  onClick={togglePlayPause}
+                  className="cursor-pointer text-indigo-500 hover:text-indigo-400 transition"
+                  size={34}
+                />
+              ) : (
+                <FaPauseCircle
+                  onClick={togglePlayPause}
+                  className="cursor-pointer text-indigo-500 hover:text-indigo-400 transition"
+                  size={34}
+                />
+              )}
 
-                                <div className='col-6' style={{ padding: '0px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px', }} >
-                                        <div className='playicons'>
-                                            <LuShuffle id='shuffle' onClick={() => {
-                                                const shuffleid = document.getElementById('shuffle')
-                                                shuffleid.style.color = 'red'
+              {/* Next */}
+              <MdOutlineSkipNext
+                onClick={nextSong}
+                className="cursor-pointer hover:text-white transition"
+                size={22}
+              />
 
-                                                shuffle()
-                                            }} />
+              {/* Repeat */}
+              {repeatMode ? (
+                <RiRepeatOneLine
+                  onClick={toggleRepeatMode}
+                  className="cursor-pointer text-indigo-400 transition"
+                  size={20}
+                />
+              ) : (
+                <IoMdRepeat
+                  onClick={toggleRepeatMode}
+                  className="cursor-pointer hover:text-indigo-400 transition"
+                  size={20}
+                />
+              )}
+            </div>
+          </div>
 
-                                        </div>
+          {/* Right - Duration */}
+          <div className="w-1/4 flex justify-end">
+            <p className="text-zinc-400 text-sm">
+              {currentSong.duration}
+            </p>
+          </div>
 
-                                        <div className='playicons'>
-                                            <MdOutlineSkipPrevious onClick={previousSong} />
-                                        </div>
-
-
-                                        <div className='playicons'>
-
-                                            <div className='playicons'>
-                                                {isPaused ?
-                                                    <FaCirclePlay style={{ fontSize: '20px' }} onClick={() => { togglePlayPause() }} />
-                                                    :
-                                                    <FaPauseCircle style={{ fontSize: '20px' }} onClick={() => { togglePlayPause() }} />
-                                                }
-                                            </div>
-
-                                        </div>
-
-                                        <div className='playicons'>
-                                            <MdOutlineSkipNext onClick={nextSong} />
-                                        </div>
-
-                                        <div className='playicons' onClick={() => {
-                                            toggleRepeatMode()
-
-                                        }}>
-
-                                            {repeatMode ? <RiRepeatOneLine /> : <IoMdRepeat />}
-
-                                        </div>
-
-
-
-                                    </div>
-
-                                    
-
-                                </div>
-                               
-
-                            </div>
-
-
-                        </div>
-
-                    </div>
-                </div>
-            }
-
-        </>
-
-    );
+        </div>
+      </div>
+    )}
+  </>
+);
 };
 
 export default Footer;

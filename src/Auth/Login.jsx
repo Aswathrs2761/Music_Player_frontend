@@ -1,143 +1,159 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { RiNeteaseCloudMusicLine } from "react-icons/ri";
 import { FaEyeSlash, FaEye } from "react-icons/fa";
-import { Link, useNavigate } from 'react-router-dom';
-import { Backend_url } from '../utils/Config';
-import axios from 'axios';
-import { useAuth } from '../Context/AuthProvider';
+import { Link, useNavigate } from "react-router-dom";
+import { Backend_url } from "../utils/Config";
+import axios from "axios";
+import { useAuth } from "../Context/AuthProvider";
+import toast from "react-hot-toast";
 
 const Login = () => {
-  const [formValue, setFormValue] = useState({ emailIdOrUserName: '', password: '' })
+  const [formValue, setFormValue] = useState({
+    emailIdOrUserName: "",
+    password: "",
+  });
+
   const [showPassword, setShowPassword] = useState(false);
-  const [auth,setAuth]= useAuth()
-
-  const navigate = useNavigate()
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
+  const [auth, setAuth] = useAuth();
+  const navigate = useNavigate();
 
   const handleOnChange = (e) => {
-    const { name, value } = e.target
-    setFormValue({ ...formValue, [name]: value })
-  }
+    const { name, value } = e.target;
+    setFormValue({ ...formValue, [name]: value });
+  };
 
+  const handleLogin = async () => {
+    if (!formValue.emailIdOrUserName || !formValue.password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
 
-  const handleLogin = async() =>{
-    const {data} = await axios.post(`${Backend_url}/api/user/login`,
-      formValue
-    )
+    const loadingToast = toast.loading("Logging in...");
+
+    try {
+      const { data } = await axios.post(
+        `${Backend_url}/api/user/login`,
+        formValue
+      );
+
       if (!data.success) {
-          if(data.cause === 'user'){
-              const myElement = document.getElementById("userspan");
-              myElement.style.color = "red";
-              myElement.innerHTML = data.message;
-
-            setTimeout(() => {  
-              myElement.innerHTML = "";
-            }, 2000);
-          }
-          else{
-            const myElement = document.getElementById("passwordspan");
-            myElement.style.color = "red";
-            myElement.innerHTML = data.message;
-            
-
-            setTimeout(() => {
-              myElement.innerHTML = "";
-            }, 2000);
-
-          }
+        toast.dismiss(loadingToast);
+        toast.error(data.message || "Invalid credentials");
+        return;
       }
 
-      if(data.success)
-      {
+      setAuth({
+        ...auth,
+        user: data.user,
+        token: data.token,
+      });
 
+      localStorage.setItem("auth", JSON.stringify(data));
 
-        setAuth({...auth,
-          user:data.user,
-          token:data.token})
+      toast.success("Login successfull ", { id: loadingToast });
 
-        localStorage.setItem('auth',JSON.stringify(data))
-        navigate('/')
-      }
+      setTimeout(() => navigate("/Home"), 1000);
 
-  }
-
+    } catch (err) {
+      toast.dismiss(loadingToast);
+      toast.error("Something went wrong. Try again.");
+    }
+  };
 
   return (
-    <div style={{ backgroundColor: '#17252A' }}>
-      <div style={{ padding: '30px' }}>
-        <span className='title'><RiNeteaseCloudMusicLine /> Music</span>
-      </div>
+    <div className="min-h-screen bg-black flex items-center justify-center px-4 relative overflow-hidden">
 
-      <div className='container-md' style={{ backgroundColor: '#1F2833', marginBottom: '40px', marginTop: '20px' }}>
-        <h1 className='heading'>Log in into music</h1>
+      {/* Background glow effect */}
+      <div className="absolute w-96 h-96 bg-indigo-600/20 blur-3xl rounded-full -top-20 -left-20"></div>
+      <div className="absolute w-96 h-96 bg-purple-600/20 blur-3xl rounded-full -bottom-20 -right-20"></div>
 
-        <div className="row align-items-center label" style={{ justifyContent: 'center', color: '#FEFFFF' }}>
-          <div className="col-sm-4">
-            <label htmlFor="inputEmailOrUserName" className="col-form-label">Email or username</label>
-          </div>
+      <div className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-8">
+
+        {/* Logo */}
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <RiNeteaseCloudMusicLine className="text-3xl text-indigo-500" />
+          <span className="text-3xl font-bold text-white">
+            Music
+          </span>
         </div>
-        <div className="row align-items-center" style={{ justifyContent: 'center' }}>
-          <div className="col-sm-4">
-            <input
-              type="text"
-              id="inputEmailOrUserName"
-              name='emailIdOrUserName'
-              value={formValue.emailIdOrUserName}
-              className="form-control"
-              placeholder='Email or username'
-              onChange={handleOnChange}
-            />
-          <span id='userspan'></span>
-          </div>
-
+        <div>
+          <span className="text-2xl font-semibold text-zinc-300 mb-4 text-center block">
+            Secure Account Login
+          </span>
         </div>
 
-        <div className="row align-items-center" style={{ justifyContent: 'center', color: '#FEFFFF' }}>
-          <div className="col-sm-4">
-            <label htmlFor="inputPassword" className="col-form-label">Password</label>
-          </div>
-        </div>
-        <div className="row align-items-center" style={{ justifyContent: 'center' }}>
-          <div className="col-sm-4" style={{ position: 'relative' }}>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              id="inputPassword"
-              className="form-control"
-              placeholder='password'
-              name='password'
-              value={formValue.password}
-              onChange={handleOnChange}
-              style={{ paddingRight: '40px' }} // Adjusting the input padding to accommodate the eye icon
-            />
-            <span className="password-toggle" onClick={togglePasswordVisibility} style={{ position: 'absolute', right: '20px', top: '45%', transform: 'translateY(-50%)' }}>
-              {!showPassword ? <FaEyeSlash /> : <FaEye />}
-            </span>
-            <div>
 
-            <span style={{textAlign: 'center'}} id="passwordspan" className="form-text"></span>
-            </div>
-          </div>
+        {/* Email */}
+        <div className="mb-4">
+          <label className="block text-md font-medium text-zinc-400 mb-3">
+            Email or Username
+          </label>
+          <input
+            type="text"
+            name="emailIdOrUserName"
+            value={formValue.emailIdOrUserName}
+            onChange={handleOnChange}
+            className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
+            placeholder="Enter your email or username"
+          />
         </div>
 
-        <div className="row align-items-center" style={{ justifyContent: 'center' }}>
-          <button className="col-sm-4 loginbutton" onClick={handleLogin}>Log in</button>
+        {/* Password */}
+        <div className="mb-6 relative">
+          <label className="block text-md font-medium text-zinc-400 mb-3">
+            Password
+          </label>
+          <input
+            type={showPassword ? "text" : "password"}
+            name="password"
+            value={formValue.password}
+            onChange={handleOnChange}
+            className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none pr-10 transition"
+            placeholder="Enter your password"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-[53px] text-zinc-500 hover:text-white transition"
+          >
+            {showPassword ? <FaEye /> : <FaEyeSlash />}
+          </button>
         </div>
 
-        {/* <div style={{ textAlign: 'center', margin: '20px' }}>
-          <Link to='/forgotpassword' className='loginpagelink'>Forgot your password?</Link>
-        </div> */}
+        {/* Login Button */}
+        <button
+          onClick={handleLogin}
+          className="w-full bg-indigo-500 hover:bg-indigo-400 text-white py-2 rounded-lg transition duration-200 font-medium shadow-lg shadow-indigo-500/20"
+        >
+          Log In
+        </button>
 
-        <h5 style={{ color: '#FEFFFF', textAlign: 'center', paddingBottom: '100px', paddingTop: '100px' }}>
-          Don't have an account? <Link to='/signup' className='loginpagelink'>Sign up for Music</Link>
-        </h5>
-      </div>
+        {/* Divider */}
+        <div className="flex items-center my-6">
+          <div className="flex-grow h-px bg-zinc-800"></div>
+          <span className="px-3 text-xs text-zinc-500">OR</span>
+          <div className="flex-grow h-px bg-zinc-800"></div>
+        </div>
 
-      <div style={{ textAlign: 'center', padding: '40px', backgroundColor: '#17252A', color: '#FEFFFF' }}>
-        <h6>This site is protected by reCAPTCHA and the Google <Link to='/n' style={{ color: '#FEFFFF' }}>Privacy Policy </Link> and <Link to='/n' style={{ color: '#FEFFFF' }}>Terms of Service</Link> apply.</h6>
+        {/* Signup Link */}
+        <p className="text-center text-sm text-zinc-400">
+          Don’t have an account?{" "}
+          <Link
+            to="/signup"
+            className="text-indigo-400 font-medium transition hover:text-indigo-300 !no-underline hover:!no-underline"
+          >
+            Sign up
+          </Link>
+        </p>
+
+        <p className="text-center text-sm text-zinc-400">
+          <Link
+            to="/forgotpassword"
+            className="text-indigo-400 font-medium transition hover:text-indigo-300 !no-underline hover:!no-underline"
+          >
+            Forgot password?
+          </Link>
+        </p>
       </div>
     </div>
   );
