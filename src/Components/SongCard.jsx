@@ -7,53 +7,43 @@ const SongCard = ({ song, onClick }) => {
       className="
         bg-gradient-to-b from-zinc-900 to-zinc-950
         hover:from-zinc-800 hover:to-zinc-900
-        rounded-2xl p-4
+        rounded-2xl
+        p-4
         transition-all duration-300
         cursor-pointer
         group
         shadow-md hover:shadow-xl
         hover:-translate-y-1
+        flex flex-col items-center text-center
       "
     >
-      {/* Image Wrapper */}
-      <div className="relative overflow-hidden rounded-xl">
+      {/* Song Image */}
+      <div className="flex justify-center items-center w-full">
         <img
           src={song.thumbNail}
           alt={song.name}
           className="
-            w-full aspect-square
+            w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36
             object-cover
+            rounded-xl
             transition-transform duration-500
             group-hover:scale-105
           "
         />
-
-        {/* Optional Dark Overlay on Hover */}
-        <div className="
-          absolute inset-0 bg-black/0
-          group-hover:bg-black/20
-          transition duration-300
-        " />
       </div>
 
-      {/* Text Section */}
-      <div className="mt-4 space-y-1">
-
-        {/* Song Name */}
-        <p className="
-          text-white font-semibold text-sm
-          leading-snug
+      {/* Song Name */}
+      <p
+        className="
+          text-white font-semibold
+          text-sm sm:text-base
+          mt-4
           line-clamp-2
-        ">
-          {song.name}
-        </p>
+        "
+      >
+        {song.name}
+      </p>
 
-        {/* Artist */}
-        {/* <p className="text-zinc-400 text-xs tracking-wide">
-          {song.artist?.userName || "Aswath"}
-        </p> */}
-
-      </div>
     </div>
   );
 };

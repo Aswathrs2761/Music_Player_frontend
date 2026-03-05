@@ -13,11 +13,7 @@ const MainLayout = ({ children }) => {
 
   const getMyMusic = async () => {
     try {
-      const res = await axios.get(
-        `${Backend_url}/api/song/get-allsongs`
-      );
-
-      if (!res.data.success) return;
+      await axios.get(`${Backend_url}/api/song/get-allsongs`);
     } catch (error) {
       console.log(error);
     }
@@ -33,30 +29,29 @@ const MainLayout = ({ children }) => {
     <div className="flex h-screen bg-black text-white overflow-hidden">
 
       {/* Sidebar */}
-      <div className="w-64 bg-zinc-950 border-r border-zinc-800 flex-shrink-0">
-        <Menu />
-      </div>
+      <Menu />
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       <div className="flex flex-col flex-1">
 
-        {/* Top Auth Menu */}
-        <div className="h-16 flex items-center justify-end px-6 border-b border-zinc-800 bg-zinc-950">
+        {/* Top Navbar */}
+        <div className="h-14 sm:h-16 flex items-center justify-end px-4 sm:px-6 border-b border-zinc-800 bg-zinc-950">
           <AuthMenu />
         </div>
 
-        {/* Scrollable Page Content */}
+        {/* Page Content */}
         <div
-          className={`flex-1 overflow-y-auto p-6 ${
-            currentSong ? "pb-24" : ""
+          className={`flex-1 overflow-y-auto p-4 sm:p-6 ${
+            currentSong ? "pb-24 sm:pb-28" : ""
           }`}
         >
           {children}
         </div>
 
-        {/* Footer Player */}
+        {/* Music Player */}
         {currentSong && <Footer />}
       </div>
+
     </div>
   );
 };

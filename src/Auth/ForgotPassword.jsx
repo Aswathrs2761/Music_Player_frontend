@@ -18,7 +18,9 @@ export default function ForgotPassword() {
       setLoading(true);
 
       const res = await axios.post(
-        "http://localhost:4000/api/user/forgotPassword",{ emailId });
+        "http://localhost:4000/api/user/forgotPassword",
+        { emailId }
+      );
 
       if (res.data.success) {
         toast.success("Reset link sent to your email ✨");
@@ -34,20 +36,20 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black px-4">
+    <div className="min-h-screen flex items-center justify-center bg-black px-4 sm:px-6 md:px-8">
       <Toaster position="top-right" reverseOrder={false} />
 
-      <div className="w-full max-w-md bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl p-8">
+      <div className="w-full max-w-sm sm:max-w-md md:max-w-lg bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl p-6 sm:p-8">
         
-        <h2 className="text-3xl font-bold text-white text-center mb-2">
+        <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-2">
           Forgot Password
         </h2>
 
-        <p className="text-gray-400 text-center mb-6 text-sm">
+        <p className="text-gray-400 text-center mb-6 text-xs sm:text-sm">
           Enter your registered email and we’ll send you a reset link.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
 
           <div>
             <label className="block text-sm text-gray-300 mb-2">
@@ -59,23 +61,23 @@ export default function ForgotPassword() {
               value={emailId}
               onChange={(e) => setEmailId(e.target.value)}
               placeholder="you@example.com"
-              className="w-full px-4 py-3 rounded-lg bg-white/10 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
+              className="w-full px-4 py-2.5 sm:py-3 rounded-lg bg-white/10 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 transition text-white font-semibold disabled:opacity-60"
+            className="w-full py-2.5 sm:py-3 rounded-lg bg-purple-600 hover:bg-purple-700 transition text-white font-semibold disabled:opacity-60"
           >
             {loading ? "Sending..." : "Send Reset Link"}
           </button>
         </form>
 
-        <p className="text-center text-gray-500 text-sm mt-6">
+        <p className="text-center text-gray-500 text-xs sm:text-sm mt-6">
           Remember your password?{" "}
           <a
-            href="/login"
+            href="/"
             className="text-purple-500 hover:text-purple-400 transition"
           >
             Sign In

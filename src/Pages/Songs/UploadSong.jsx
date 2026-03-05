@@ -19,7 +19,7 @@ const UploadSong = () => {
 
   useEffect(() => {
     if (!auth?.token) {
-      navigate("/login");
+      navigate("/Home");
     }
   }, [auth?.token]);
 
@@ -86,7 +86,7 @@ const UploadSong = () => {
       setUploadedSongFileName("");
 
       setTimeout(() => {
-        navigate("/");
+        navigate("/Home");
       }, 1000);
 
     } catch (error) {

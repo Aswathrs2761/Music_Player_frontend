@@ -20,7 +20,7 @@ const PlaylistCard = ({ playList = {}, onClick }) => {
       "
     >
       {/* Thumbnail */}
-      <div className="relative h-44 w-full overflow-hidden">
+      <div className="relative h-36 sm:h-40 md:h-44 lg:h-48 w-full overflow-hidden">
         <img
           src={playList.thumbNail}
           alt={name}
@@ -37,8 +37,8 @@ const PlaylistCard = ({ playList = {}, onClick }) => {
       </div>
 
       {/* Body */}
-      <div className="p-4">
-        <p className="text-white font-medium text-sm tracking-wide">
+      <div className="p-3 sm:p-4">
+        <p className="text-white font-medium text-xs sm:text-sm md:text-base tracking-wide">
           {truncated(name, 18)}
         </p>
       </div>

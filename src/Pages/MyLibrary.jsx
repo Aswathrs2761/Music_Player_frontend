@@ -52,14 +52,14 @@ const MyLibrary = () => {
 
   return (
     <MainLayout>
-      <div className="max-w-6xl mx-auto space-y-12">
+      <div className="max-w-6xl mx-auto px-2 sm:px-4 md:px-6 space-y-8 sm:space-y-10 md:space-y-12">
 
-        <h1 className="text-3xl font-bold">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">
           📚 Your Library
         </h1>
 
         {loading && (
-          <p className="text-zinc-500">
+          <p className="text-zinc-500 text-sm sm:text-base">
             Loading library...
           </p>
         )}
@@ -68,14 +68,16 @@ const MyLibrary = () => {
         {!loading && (
           <div
             onClick={() => navigate("/likedsongs")}
-            className="flex items-center gap-6 bg-gradient-to-r from-indigo-600 to-purple-600 p-6 rounded-2xl cursor-pointer shadow-xl hover:scale-[1.02] transition"
+            className="flex items-center gap-4 sm:gap-6 bg-gradient-to-r from-indigo-600 to-purple-600 p-4 sm:p-6 rounded-xl sm:rounded-2xl cursor-pointer shadow-xl hover:scale-[1.02] transition"
           >
-            <FaHeart className="text-white text-4xl" />
+            <FaHeart className="text-white text-3xl sm:text-4xl" />
+
             <div>
-              <h2 className="text-xl font-semibold text-white">
+              <h2 className="text-lg sm:text-xl font-semibold text-white">
                 Liked Songs
               </h2>
-              <p className="text-indigo-100 text-sm">
+
+              <p className="text-indigo-100 text-xs sm:text-sm">
                 {likedSongs.length} songs
               </p>
             </div>
@@ -84,16 +86,18 @@ const MyLibrary = () => {
 
         {/* LIKED PLAYLISTS */}
         <div>
-          <h2 className="text-2xl font-semibold mb-6">
+
+          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-4 sm:mb-6">
             Liked Playlists
           </h2>
 
           {likedPlaylists.length === 0 ? (
-            <p className="text-zinc-500">
+            <p className="text-zinc-500 text-sm sm:text-base">
               You haven’t liked any playlists yet.
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
+
               {likedPlaylists.map((playlist) => (
                 <div
                   key={playlist._id}
@@ -105,24 +109,28 @@ const MyLibrary = () => {
                     setPlayListId(playlist._id);
                     navigate("/playlist-songs");
                   }}
-                  className="flex items-center gap-4 bg-zinc-900 hover:bg-zinc-800 p-4 rounded-lg transition cursor-pointer"
+                  className="flex items-center gap-3 sm:gap-4 bg-zinc-900 hover:bg-zinc-800 p-3 sm:p-4 rounded-lg transition cursor-pointer"
                 >
+
                   <img
                     src={playlist.thumbNail}
                     alt={playlist.name}
-                    className="w-14 h-14 rounded-md object-cover"
+                    className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-md object-cover"
                   />
 
-                  <div>
-                    <p className="text-white font-medium truncate max-w-xs">
+                  <div className="min-w-0">
+                    <p className="text-white text-sm sm:text-base font-medium truncate max-w-[160px] sm:max-w-xs">
                       {playlist.name}
                     </p>
-                    <p className="text-sm text-zinc-400">
+
+                    <p className="text-xs sm:text-sm text-zinc-400">
                       Playlist
                     </p>
                   </div>
+
                 </div>
               ))}
+
             </div>
           )}
         </div>

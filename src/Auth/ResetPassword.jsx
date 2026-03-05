@@ -41,11 +41,10 @@ export default function ResetPassword() {
 
       if (res.data.success) {
         toast.success("Password reset successful ✨");
-        setTimeout(() => navigate("/login"), 1500);
+        setTimeout(() => navigate("/"), 1500);
       } else {
         toast.error(res.data.message);
       }
-
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Something went wrong"
@@ -56,7 +55,7 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black px-4">
+    <div className="min-h-screen flex items-center justify-center bg-black px-4 sm:px-6 md:px-8">
       <Toaster
         position="top-right"
         toastOptions={{
@@ -68,17 +67,17 @@ export default function ResetPassword() {
         }}
       />
 
-      <div className="w-full max-w-md bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl p-8">
+      <div className="w-full max-w-sm sm:max-w-md md:max-w-lg bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl p-6 sm:p-8">
 
-        <h2 className="text-3xl font-bold text-white text-center mb-2">
+        <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-2">
           Reset Password
         </h2>
 
-        <p className="text-gray-400 text-center mb-6 text-sm">
+        <p className="text-gray-400 text-center mb-5 sm:mb-6 text-xs sm:text-sm">
           Enter your new password below.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
 
           {/* New Password */}
           <div className="relative">
@@ -91,12 +90,12 @@ export default function ResetPassword() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter new password"
-              className="w-full px-4 py-3 pr-12 rounded-lg bg-white/10 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
+              className="w-full px-4 py-2.5 sm:py-3 pr-12 rounded-lg bg-white/10 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
             />
 
             <span
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-[45px] cursor-pointer text-gray-400 hover:text-white transition"
+              className="absolute right-4 top-[42px] sm:top-[45px] cursor-pointer text-gray-400 hover:text-white transition text-sm sm:text-base"
             >
               {showPassword ? "Hide" : "Show"}
             </span>
@@ -113,14 +112,14 @@ export default function ResetPassword() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm new password"
-              className="w-full px-4 py-3 pr-12 rounded-lg bg-white/10 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
+              className="w-full px-4 py-2.5 sm:py-3 pr-12 rounded-lg bg-white/10 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
             />
 
             <span
               onClick={() =>
                 setShowConfirmPassword(!showConfirmPassword)
               }
-              className="absolute right-4 top-[45px] cursor-pointer text-gray-400 hover:text-white transition"
+              className="absolute right-4 top-[42px] sm:top-[45px] cursor-pointer text-gray-400 hover:text-white transition text-sm sm:text-base"
             >
               {showConfirmPassword ? "Hide" : "Show"}
             </span>
@@ -129,7 +128,7 @@ export default function ResetPassword() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 transition text-white font-semibold disabled:opacity-60"
+            className="w-full py-2.5 sm:py-3 rounded-lg bg-purple-600 hover:bg-purple-700 transition text-white font-semibold disabled:opacity-60"
           >
             {loading ? "Resetting..." : "Reset Password"}
           </button>

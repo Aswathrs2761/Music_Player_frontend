@@ -28,8 +28,10 @@ const CloudinaryUpload = ({ setTrackUrl, setUploadedSongFileName }) => {
     <button
       onClick={uploadImageWidget}
       className="
-        flex items-center gap-2
-        px-5 py-2.5
+        flex items-center justify-center gap-2
+        px-4 sm:px-5
+        py-2 sm:py-2.5
+        text-sm sm:text-base
         bg-indigo-500 hover:bg-indigo-400
         text-white font-medium
         rounded-lg
@@ -37,7 +39,7 @@ const CloudinaryUpload = ({ setTrackUrl, setUploadedSongFileName }) => {
         shadow-lg shadow-indigo-500/20
       "
     >
-      <Upload size={18} />
+      <Upload size={16} className="sm:w-[18px] sm:h-[18px]" />
       Select Track
     </button>
   );

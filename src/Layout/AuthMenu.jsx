@@ -1,19 +1,23 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../Context/AuthProvider";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Upload, LogOut } from "lucide-react";
 
 const AuthMenu = () => {
+
   const navigate = useNavigate();
   const [auth] = useAuth();
+
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   const profileLetter =
     auth?.user?.userName?.charAt(0)?.toUpperCase() || "A";
 
-  /* -------- Close on Outside Click -------- */
+  /* ---------- CLOSE DROPDOWN ---------- */
+
   useEffect(() => {
+
     const handleClickOutside = (event) => {
       if (
         dropdownRef.current &&
@@ -23,37 +27,49 @@ const AuthMenu = () => {
       }
     };
 
+    const handleEsc = (e) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () =>
+    document.addEventListener("keydown", handleEsc);
+
+    return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEsc);
+    };
+
   }, []);
 
   return (
-    <div className="flex justify-end items-center relative">
+    <div className="flex justify-end items-center relative z-40">
 
       {auth?.token ? (
+
         <div className="relative" ref={dropdownRef}>
 
-          {/* Avatar Button */}
+          {/* PROFILE BUTTON */}
+
           <button
-            onClick={() => setOpen(!open)}
+            onClick={() => setOpen((prev) => !prev)}
             className="
-              flex items-center gap-3
-              bg-zinc-900/80 backdrop-blur-md
-              border border-zinc-800
-              px-3 py-2 rounded-full
-              hover:border-indigo-500/40
-              hover:bg-zinc-800
-              transition-all duration-300
+            flex items-center gap-2
+            p-1.5
+            rounded-full
+            hover:bg-zinc-800
+            transition
             "
           >
+
+            {/* AVATAR */}
+
             <div
               className="
-                w-9 h-9 rounded-full
-                bg-gradient-to-br from-indigo-500 to-purple-600
-                flex items-center justify-center
-                text-white font-semibold text-sm
-                shadow-md
+              w-9 h-9
+              rounded-full
+              bg-gradient-to-br from-indigo-500 to-purple-600
+              flex items-center justify-center
+              text-white font-semibold text-sm
               "
             >
               {profileLetter}
@@ -61,55 +77,65 @@ const AuthMenu = () => {
 
             <ChevronDown
               size={16}
-              className={`text-zinc-400 transition-transform duration-300 ${
-                open ? "rotate-180 text-white" : ""
+              className={`transition ${
+                open ? "rotate-180 text-white" : "text-zinc-400"
               }`}
             />
+
           </button>
 
-          {/* Dropdown */}
+          {/* DROPDOWN */}
+
           <div
             className={`
-              absolute right-0 mt-4 w-60
-              bg-zinc-900/95 backdrop-blur-xl
-              border border-zinc-800
-              rounded-2xl shadow-2xl
-              overflow-hidden
-              transition-all duration-200 origin-top
-              z-50
-              ${
-                open
-                  ? "opacity-100 scale-100 translate-y-0"
-                  : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
-              }
+            absolute right-0 mt-2
+            w-56
+            rounded-xl
+            bg-zinc-900/95 backdrop-blur-md
+            border border-zinc-800
+            shadow-xl
+            overflow-hidden
+            transition-all duration-200 origin-top-right
+            ${
+              open
+                ? "opacity-100 scale-100"
+                : "opacity-0 scale-95 pointer-events-none"
+            }
             `}
           >
 
-            {/* User Info */}
-            <div className="px-5 py-4 border-b border-zinc-800">
-              <p className="text-white font-medium text-sm">
+            {/* USER INFO */}
+
+            <div className="px-4 py-3 border-b border-zinc-800">
+
+              <p className="text-white text-sm font-semibold leading-tight">
                 {auth?.user?.userName}
               </p>
-              <p className="text-zinc-400 text-xs mt-1">
-                {auth?.user?.email}
+
+              <p className="text-zinc-400 text-xs truncate mt-1">
+                {auth?.user?.emailId}
               </p>
+
             </div>
 
-            {/* Menu Links */}
-            <div className="py-2">
+            {/* MENU LINKS */}
+
+            <div className="py-1">
 
               <Link
                 to="/uploadsong"
                 onClick={() => setOpen(false)}
                 className="
-                  block px-5 py-3 text-sm
-                  text-zinc-300
-                  hover:bg-zinc-800
-                  hover:text-white
-                  transition
-                  no-underline
+                flex items-center gap-3
+                px-4 py-2
+                text-sm
+                text-blue-400
+                hover:bg-zinc-800
+                transition
+                !no-underline
                 "
               >
+                <Upload size={16} />
                 Upload Song
               </Link>
 
@@ -117,55 +143,65 @@ const AuthMenu = () => {
                 to="/logout"
                 onClick={() => setOpen(false)}
                 className="
-                  block px-5 py-3 text-sm
-                  text-red-400
-                  hover:bg-red-600/10
-                  hover:text-red-500
-                  transition
-                  no-underline
+                flex items-center gap-3
+                px-4 py-2
+                text-sm
+                text-blue-400
+                hover:bg-zinc-800
+                transition
+                !no-underline
                 "
               >
+                <LogOut size={16} />
                 Log Out
               </Link>
 
             </div>
+
           </div>
+
         </div>
+
       ) : (
-        <div className="flex gap-4">
+
+        /* LOGIN / SIGNUP BUTTONS */
+
+        <div className="flex gap-2">
 
           <button
             onClick={() => navigate("/signup")}
             className="
-              px-5 py-2
-              border border-zinc-800
-              text-zinc-300
-              rounded-lg
-              hover:border-indigo-500/40
-              hover:text-white
-              transition
+            px-4 py-2
+            border border-zinc-700
+            text-zinc-300
+            text-sm
+            rounded-lg
+            hover:bg-zinc-800
+            transition
             "
           >
             Sign Up
           </button>
 
           <button
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/")}
             className="
-              px-5 py-2
-              bg-gradient-to-r from-indigo-500 to-purple-600
-              hover:opacity-90
-              text-white font-medium
-              rounded-lg
-              transition
-              shadow-lg
+            px-4 py-2
+            bg-indigo-600
+            hover:bg-indigo-700
+            text-white
+            text-sm
+            rounded-lg
+            transition
             "
           >
             Log In
           </button>
 
         </div>
+
       )}
+
     </div>
   );
 };

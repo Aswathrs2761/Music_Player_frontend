@@ -26,7 +26,9 @@ const App = () => {
     <>
       {/* Global Toast System */}
       <Toaster
-        position="top-right"
+        position={
+          window.innerWidth < 640 ? "top-center" : "top-right"
+        }
         reverseOrder={false}
         toastOptions={{
           style: {
@@ -42,7 +44,10 @@ const App = () => {
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/forgotpassword" element={<ForgotPassword />} />
-        <Route path="/resetpassword/:userId/:token" element={<ResetPassword />} />
+        <Route
+          path="/resetpassword/:userId/:token"
+          element={<ResetPassword />}
+        />
         <Route path="/Home" element={<HomePage />} />
         <Route path="/uploadsong" element={<UploadSong />} />
         <Route path="/mymusic" element={<Mymusic />} />
